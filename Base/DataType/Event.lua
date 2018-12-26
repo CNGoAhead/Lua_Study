@@ -46,7 +46,7 @@ local function InitEvent(tbl)
     end
 end
 
-local function EventParams(...)
+function EventParams(...)
     return {__params__ = {...}}
 end
 
@@ -100,7 +100,7 @@ local function AddEvent(tbl, e)
     setmetatable(tbl, mt)
 end
 
-local function Event(tbl, e)
+function Event(tbl, e)
     InitEvent(tbl)
     AddEvent(tbl, e)
     return tbl

@@ -1,7 +1,7 @@
 local function PreAssertInterface(interfaceName, ...)
     assert(
         interfaceName,
-        string.format("input a legal class name, not %s\n%s", tostring(interfaceName), debug.traceback())
+        string.format("input a legal interface name, not %s\n%s", tostring(interfaceName), debug.traceback())
     )
     local count = 0
     for _, v in ipairs({...}) do
@@ -25,7 +25,7 @@ local function MergeInterface(interface, supers)
         for k, v in pairs(t) do
             assert(
                 type(v) == 'function',
-                string.format("interface just inher",... )
+                string.format("interface just inherit function") 
             )
             assert(
                 interface[k] == nil,
@@ -36,11 +36,10 @@ local function MergeInterface(interface, supers)
     end
 end
 
-local function Interface(interfaceName, ...)
-    PreAssertInterface(className, ...)
+function Interface(interfaceName, ...)
+    PreAssertInterface(interfaceName, ...)
     local supers = {...}
-    local interface = {__class__ = className, __super__ = supers, __create__ = function()end}
+    local interface = {__class__ = interfaceName, __super__ = supers}
     MergeInterface(interface, supers)
+    return interface
 end
-
-return Interface

@@ -21,37 +21,37 @@ local function initPropTable(tbl)
 
     if not tbl.PropGet then
         -- 类似rawget
-        tbl.PropGet = function(name)
+        tbl.PropGet = function(self, name)
             local value
             local key = '_' .. name
-            value = decrypt(tbl.__props[key])
+            value = decrypt(self.__props[key])
             return value
         end
 
         -- 类似rawset
-        tbl.PropSet = function(name, value)
+        tbl.PropSet = function(self, name, value)
             local key = '_' .. name
-            tbl.__props[key] = encrypt(value)
+            self.__props[key] = encrypt(value)
         end
 
         -- 类似pairs
-        tbl.PropPairs = function()
+        tbl.PropPairs = function(self)
             return function(t, key)
                 key = next(t, key and '_' .. key)
                 local name, value
                 if key then
                     name = string.sub(key, 2, -1)
-                    local prop = tbl.__propgss['prop_' .. name]
-                    value = prop.Get and prop.Get() or nil
+                    local prop = self.__propgss['prop_' .. name]
+                    value = prop.Get and prop:Get(t, key) or nil
                 end
                 return name, value
             end,
-            tbl.__props
+            self.__props
         end
 
         -- 
-        tbl.IsProp = function(name)
-            return tbl.__propgss['prop_' .. name] ~= nil
+        tbl.IsProp = function(self, name)
+            return self.__propgss['prop_' .. name] ~= nil
         end
 
         local metatable = getmetatable(tbl) or {}
@@ -68,10 +68,10 @@ local function initPropTable(tbl)
         end
 
         metatable.__index = function(t, key)
-            local prop = rawget(t, '__propgss')['prop_' .. key]
+            local prop = t.__propgss['prop_' .. key]
             if prop then
                 if prop.Get then
-                    return prop.Get()
+                    return prop:Get(t, key)
                 else
                     print("can't Get a property without Get function")
                 end
@@ -89,10 +89,10 @@ local function initPropTable(tbl)
 
         local oldnewindex = metatable.__newindex
         metatable.__newindex = function(t, key, value)
-            local prop = rawget(t, '__propgss')['prop_' .. key]
+            local prop = t.__propgss['prop_' .. key]
             if prop then
                 if prop.Set then
-                    prop.Set(value)
+                    prop:Set(t, key, value)
                 else
                     print("can't Set a property without Set function")
                 end
@@ -109,22 +109,24 @@ local function initPropTable(tbl)
     end
 end
 
-local function NewProp(tbl, p)
-    local Prop = {}
-    Prop.Get = p.Get and p.Get or Handler(tbl.PropGet, p.name)
-    Prop.Set = function(value)
-        if value ~= tbl[p.name] then
-            if p.Set then
-                p.Set(value)
+local function NewProp(p)
+    local Prop = {_OnChange = p.OnChange, _OnSet = p.OnSet, _Get = p.Get, _Set = p.Set}
+    Prop.Get = p.Get and p.Get or function(self, t, name)
+        return t.PropGet(name)
+    end
+    Prop.Set = function(self, t, name, value)
+        if value ~= t[name] then
+            if self._Set then
+                self._Set(value)
             else
-                tbl.PropSet(p.name, value)
+                t.PropSet(name, value)
             end
-            if p.OnChange then
-                p.OnChange(value)
+            if self._OnChange then
+                self._OnChange(value)
             end
         end
-        if p.OnSet then
-            p.OnSet(value)
+        if self._OnSet then
+            self._OnSet(value)
         end
     end
     return Prop

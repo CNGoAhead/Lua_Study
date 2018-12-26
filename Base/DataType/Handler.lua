@@ -1,9 +1,15 @@
-local function Handler(func, ...)
+function Handler(func, param, ...)
     assert(
         type(func) == 'function',
         'handler first param should be a function'
     )
-    return function()
-        return func(...)
+    if ... then
+        return Handler(function(...)
+            return func(param, ...)
+        end, ...)
+    else
+        return function(...)
+            return func(param, ...)
+        end
     end
 end

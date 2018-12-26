@@ -15,7 +15,7 @@ local function PreAssertClass(className, ...)
         end
         assert(
             count <= 1,
-            stirng.format("%s can't have more than one super with a create function\n", className)
+            string.format("%s can't have more than one super with a create function\n", className)
         )
     end
 end
@@ -50,7 +50,7 @@ local function InitClass(class, supers)
     for _, v in ipairs(supers) do
         if v.__create__ then
             class.__create__ = function(...)
-                return v:create(...)
+                return v.new(...)
             end
             break
         end
@@ -69,14 +69,12 @@ local function InitClass(class, supers)
     end
 end
 
-local function Class(className, ...)
+function Class(className, ...)
     PreAssertClass(className, ...)
     local supers = {...}
     local class = {__class__ = className, __super__ = supers}
-    MergeSuper(class, supers)
+    MergeSuperClass(class, supers)
     InheritClass(class, supers)
     InitClass(class, supers)
     return class
 end
-
-return Class

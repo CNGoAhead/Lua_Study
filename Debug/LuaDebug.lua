@@ -15,6 +15,7 @@ end
 local Test = Class('Test', TickUp)
 
 function Test:Test()
+    Event(self, 'OnChange')
     Property(self,
         {
             name = 'value',
@@ -22,9 +23,11 @@ function Test:Test()
             flag = 'rw',
             OnChange = function()
                 print('on change', self:PropGet('value'))
+                self.OnChange[nil]()
             end,
             OnSet = function()
                 print('on set ' .. self:PropGet('value'))
+                self.OnSet[nil]()
             end,
             Get = function()
                 print('get' .. self:PropGet('value'))
@@ -36,6 +39,13 @@ function Test:Test()
             end
         }
     )
+    Event(self, 'OnSet')
+    self.OnChange = function()
+        print('event on change')
+    end
+    self.OnSet = function()
+        print('event on set')
+    end
 end
 
 local p1 = 2

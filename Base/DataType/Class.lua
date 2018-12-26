@@ -10,7 +10,7 @@ local function PreAssertClass(className, ...)
             superType == 'table',
             string.format("%s can't be a super\n", superType)
         )
-        if superType == 'table' and v.__class and v.__create then
+        if superType == 'table' and v.__class__ and v.__create__ then
             count = count + 1
         end
         assert(
@@ -22,8 +22,8 @@ end
 
 local function MergeSuperClass(class, supers)
     for _, t in ipairs(supers) do
-        if t.__class then
-            class[t.__class] = t
+        if t.__class__ then
+            class[t.__class__] = t
         end
     end
 end
@@ -45,11 +45,11 @@ local function InheritClass(class, supers)
 end
 
 local function InitClass(class, supers)
-    class[class.__class] = class[class.__class] or function()
+    class[class.__class__] = class[class.__class__] or function()
     end
     for _, v in ipairs(supers) do
-        if v.__create then
-            class.__create = function(...)
+        if v.__create__ then
+            class.__create__ = function(...)
                 return v:create(...)
             end
             break
@@ -57,14 +57,14 @@ local function InitClass(class, supers)
     end
     class.new = function(...)
         local instance
-        if class.__create then
-            instance = class.__create(...)
+        if class.__create__ then
+            instance = class.__create__(...)
         else
             instance = {}
         end
         setmetatable(instance, {__index = class})
         instance.class = class
-        instance[class.__class](instance, ...)
+        instance[class.__class__](instance, ...)
         return instance
     end
 end
@@ -72,7 +72,7 @@ end
 local function Class(className, ...)
     PreAssertClass(className, ...)
     local supers = {...}
-    local class = {__class = className, __super = supers}
+    local class = {__class__ = className, __super__ = supers}
     MergeSuper(class, supers)
     InheritClass(class, supers)
     InitClass(class, supers)

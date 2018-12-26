@@ -10,7 +10,7 @@ local function PreAssertInterface(interfaceName, ...)
             superType == 'table',
             string.format("%s can't be a super\n", superType)
         )
-        if superType == 'table' and v.__class and v.__create then
+        if superType == 'table' and v.__class__ and v.__create__ then
             count = count + 1
         end
         assert(
@@ -39,7 +39,7 @@ end
 local function Interface(interfaceName, ...)
     PreAssertInterface(className, ...)
     local supers = {...}
-    local interface = {__class = className, __super = supers, __create = function()end}
+    local interface = {__class__ = className, __super__ = supers, __create__ = function()end}
     MergeInterface(interface, supers)
 end
 

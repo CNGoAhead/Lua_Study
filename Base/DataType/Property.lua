@@ -14,24 +14,24 @@ end
 
 local function initPropTable(tbl)
     -- 属性的值存储在这里
-    tbl.__props = tbl.__props or {}
+    tbl.__props__ = tbl.__props__ or {}
 
     -- 属性的读写方式存储在这里
-    tbl.__propgss = tbl.__propgss or {}
+    tbl.__propgss__ = tbl.__propgss__ or {}
 
     if not tbl.PropGet then
         -- 类似rawget
         tbl.PropGet = function(self, name)
             local value
             local key = '_' .. name
-            value = decrypt(self.__props[key])
+            value = decrypt(self.__props__[key])
             return value
         end
 
         -- 类似rawset
         tbl.PropSet = function(self, name, value)
             local key = '_' .. name
-            self.__props[key] = encrypt(value)
+            self.__props__[key] = encrypt(value)
         end
 
         -- 类似pairs
@@ -41,17 +41,17 @@ local function initPropTable(tbl)
                 local name, value
                 if key then
                     name = string.sub(key, 2, -1)
-                    local prop = self.__propgss['prop_' .. name]
+                    local prop = self.__propgss__['prop_' .. name]
                     value = prop.Get and prop:Get(t, key) or nil
                 end
                 return name, value
             end,
-            self.__props
+            self.__props__
         end
 
         -- 
         tbl.IsProp = function(self, name)
-            return self.__propgss['prop_' .. name] ~= nil
+            return self.__propgss__['prop_' .. name] ~= nil
         end
 
         local metatable = getmetatable(tbl) or {}
@@ -68,7 +68,7 @@ local function initPropTable(tbl)
         end
 
         metatable.__index = function(t, key)
-            local prop = t.__propgss['prop_' .. key]
+            local prop = t.__propgss__['prop_' .. key]
             if prop then
                 if prop.Get then
                     return prop:Get(t, key)
@@ -88,19 +88,20 @@ local function initPropTable(tbl)
         end
 
         local oldnewindex = metatable.__newindex
+        if type(oldnewindex) ~= 'function' then
+            oldnewindex = nil
+        end
+
         metatable.__newindex = function(t, key, value)
-            local prop = t.__propgss['prop_' .. key]
+            local prop = t.__propgss__['prop_' .. key]
             if prop then
                 if prop.Set then
                     prop:Set(t, key, value)
                 else
                     print("can't Set a property without Set function")
                 end
-            -- 修改原表的行为不合适
-            -- elseif type(oldnewindex) == 'table' then
-            --     return oldnewindex[key]
-            -- elseif type(oldnewindex) == 'function' then
-            --     return oldnewindex(tab, key, value)
+            elseif oldnewindex then
+                return oldnewindex(t, key, value)
             else
                 rawset(t, key, value)
             end
@@ -136,13 +137,13 @@ end
 local function Property(tbl, p, ...)
     initPropTable(tbl)
     if p then
-        tbl.__props['_' .. p.name] = encrypt(p.default)
-        tbl.__propgss['prop_' .. p.name] = NewProp(tbl, p)
+        tbl.__props__['_' .. p.name] = encrypt(p.default)
+        tbl.__propgss__['prop_' .. p.name] = NewProp(tbl, p)
         if string.find(p.flag, 'r') == nil then
-            tbl.__propgss['prop_' .. p.name].Get = nil
+            tbl.__propgss__['prop_' .. p.name].Get = nil
         end
         if string.find(p.flag, 'w') == nil then
-            tbl.__propgss['prop_' .. p.name].Set = nil
+            tbl.__propgss__['prop_' .. p.name].Set = nil
         end
         Property(tbl, ...)
     end

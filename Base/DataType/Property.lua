@@ -1,12 +1,12 @@
 local function encrypt(value)
-    if type(value) == 'number' and value ~= 0 then
+    if type(value) == 'number' then
         value = value * 11 + 7
     end
     return value
 end
 
 local function decrypt(value)
-    if type(value) == 'number' and value ~= 0 then
+    if type(value) == 'number' then
         value = (value - 7) / 11
     end
     return value
@@ -112,15 +112,19 @@ end
 
 local function NewProp(p)
     local Prop = {_OnChange = p.OnChange, _OnSet = p.OnSet, _Get = p.Get, _Set = p.Set}
-    Prop.Get = p.Get and p.Get or function(self, t, name)
-        return t.PropGet(name)
+    Prop.Get = function(self, t, name)
+        if self._Get then
+            return self._Get()
+        else
+            return t:PropGet(name)
+        end
     end
     Prop.Set = function(self, t, name, value)
         if value ~= t[name] then
             if self._Set then
                 self._Set(value)
             else
-                t.PropSet(name, value)
+                t:PropSet(name, value)
             end
             if self._OnChange then
                 self._OnChange(value)
@@ -134,11 +138,11 @@ local function NewProp(p)
 end
 
 --p = {name = '', default = 0, flag = 'rw', OnSet = function() end, OnChange = function() end, Get = function() end, Set = function() end}
-local function Property(tbl, p, ...)
+function Property(tbl, p, ...)
     initPropTable(tbl)
     if p then
         tbl.__props__['_' .. p.name] = encrypt(p.default)
-        tbl.__propgss__['prop_' .. p.name] = NewProp(tbl, p)
+        tbl.__propgss__['prop_' .. p.name] = NewProp(p)
         if string.find(p.flag, 'r') == nil then
             tbl.__propgss__['prop_' .. p.name].Get = nil
         end

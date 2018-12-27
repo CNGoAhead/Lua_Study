@@ -12,7 +12,13 @@ function TickUp:Tick()
     end
 end
 
-local Test = Class('Test', TickUp)
+local T = Class('T')
+
+function T:T()
+    print('create T')
+end
+
+local Test = Class('Test', T, TickUp)
 
 function Test:Test()
     Event(self, 'OnChange')

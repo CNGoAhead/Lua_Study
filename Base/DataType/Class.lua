@@ -37,7 +37,7 @@ local function InheritClass(class, supers)
         setmetatable(class, {__index = function(_, key)
             for _, v in ipairs(supers) do
                 if v[key] ~= nil then
-                    return k[key]
+                    return v[key]
                 end
             end
         end})
@@ -46,6 +46,10 @@ end
 
 local function InitClass(class, supers)
     class[class.__class__] = class[class.__class__] or function()
+    end
+
+    class.__create__ = function()
+        return {}
     end
     for _, v in ipairs(supers) do
         if v.__create__ then
@@ -56,12 +60,7 @@ local function InitClass(class, supers)
         end
     end
     class.new = function(...)
-        local instance
-        if class.__create__ then
-            instance = class.__create__(...)
-        else
-            instance = {}
-        end
+        local instance = class.__create__(...)
         setmetatable(instance, {__index = class})
         instance.class = class
         instance[class.__class__](instance, ...)

@@ -3,7 +3,7 @@ function Handler(func, param, ...)
         type(func) == 'function',
         'handler first param should be a function'
     )
-    if ... then
+    if next({...}) then
         return Handler(function(...)
             return func(param, ...)
         end, ...)

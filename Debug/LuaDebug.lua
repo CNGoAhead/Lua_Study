@@ -12,7 +12,13 @@ function TickUp:Tick()
     end
 end
 
-local T = Class('T')
+local PT = Class('PT')
+
+function PT:PT()
+    print('create PT')
+end
+
+local T = Class('T', PT)
 
 function T:T()
     print('create T')
@@ -47,10 +53,16 @@ function Test:Test()
     )
     Event(self, 'OnSet')
     self.OnChange = function()
-        print('event on change')
+        print('event on change 1')
     end
     self.OnSet = function()
-        print('event on set')
+        print('event on set 1')
+    end
+    self.OnChange = self.OnChange + function()
+        print('event on change 2')
+    end
+    self.OnSet = self.OnSet + function()
+        print('event on set 2')
     end
 end
 
@@ -61,13 +73,23 @@ local p4 = 5
 
 local t = Test.new()
 
+function a(b, c, d)
+    print(b, c, d)
+end
+
+local h = Handler(a, nil, 1)
+
 require("socket")
 function Sleep(n)
    socket.select(nil, nil, n)
 end
 
 while 1 do
+    local a = {1, nil, 2, nil, 3, nil}
+    print(1 / 0, - 1 / 0, math.sqrt(-1))
+    print(#a)
     t:Tick()
+    h(2)
     print(json.encode(t.__props__))
     Sleep(5)
 end

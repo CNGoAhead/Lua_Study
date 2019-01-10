@@ -96,14 +96,14 @@ local function initPropTable(tbl)
             local prop = t.__propgss__['prop_' .. key]
             if prop then
                 if prop.Set then
-                    prop:Set(t, key, value)
+                    return prop:Set(t, key, value)
                 else
                     print("can't Set a property without Set function")
                 end
             elseif oldnewindex then
                 return oldnewindex(t, key, value)
             else
-                rawset(t, key, value)
+                return rawset(t, key, value)
             end
         end
         setmetatable(tbl, metatable)
@@ -133,8 +133,8 @@ local function NewProp(p)
         if self._OnSet then
             self._OnSet(value)
         end
+        return value
     end
-    return Prop
 end
 
 --p = {name = '', default = 0, flag = 'rw', OnSet = function() end, OnChange = function() end, Get = function() end, Set = function() end}

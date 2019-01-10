@@ -84,12 +84,52 @@ function Sleep(n)
    socket.select(nil, nil, n)
 end
 
+local function decodeSeasonId(id)
+    local mouth = id % 100
+    local year = (id - mouth) / 100
+    return year, mouth
+end
+
+local function getSeasonId(diff)
+    diff = diff or 0
+    local now = os.time()
+
+    local date = os.date("!*t", now)
+
+    local mday = date.day --一个月中的第几天      (01-31)
+    local wday = date.wday --一个星期中的第几天    (1-7)(周日-周六)
+    wday = (wday - 1) % 7
+    wday = wday == 0 and 7 or wday
+
+    local year = date.year
+    local month = date.month + diff
+
+    if mday < 7 and mday < wday then
+        --现在还是上个月的赛季延续，也就是说上个月才是现在的赛季ID
+        month = month - 1
+        month = (month + 11) % 12 + 1
+        year = year - math.floor(month / 12)
+    end
+
+    --赛季ID = 年 * 100 + 月
+    return year * 100 + month
+end
+
+local function getMouthlyRankEndTime()
+    local y, m = decodeSeasonId(getSeasonId())
+    return os.time({year = y, month = m, day = 1, hour = 0, min = 0, sec = 0})
+end
+
 while 1 do
-    local a = {1, nil, 2, nil, 3, nil}
-    print(1 / 0, - 1 / 0, math.sqrt(-1))
-    print(#a)
-    t:Tick()
-    h(2)
-    print(json.encode(t.__props__))
+    for i = 1, 1000000 do
+        string.find("123123132526243563512341412", '.*2.*2.*2.*')
+    end
+    print('end')
+    -- local a = {1, nil, 2, nil, 3, nil}
+    -- print(1 / 0, - 1 / 0, math.sqrt(-1))
+    -- print(#a)
+    -- t:Tick()
+    -- h(2)
+    -- print(json.encode(t.__props__))
     Sleep(5)
 end

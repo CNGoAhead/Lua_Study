@@ -30,13 +30,6 @@ local function InitEvent(tbl)
         end
         mt.__newindex = function(t, k, v)
             if t.__event__[k] then
-                v = v or {}
-                local vtpye = type(v)
-                assert(vtpye == "function" or vtpye == "table")
-                if vtpye == "function" then
-                    t.__event__[k].__vec__ = {v}
-                    t.__event__[k].__map__ = {[v] = true}
-                end
             elseif oldnewindex then
                 oldnewindex(t, k, v)
             else
@@ -49,42 +42,33 @@ end
 local function AddEvent(tbl, e)
     local mt = getmetatable(tbl) or {}
     if not tbl.__event__[e] then
-        tbl.__event__[e] = {__vec__ = {}, __map__ = {}}
+        tbl.__event__[e] = {__map__ = {}}
         setmetatable(
             tbl.__event__[e],
             {
                 __index = function(t, k)
                     return function(...)
-                        for _, foo in pairs(t.__vec__) do
+                        for foo, _ in pairs(t.__map__) do
                             foo(...)
                         end
                     end
                 end,
                 __newindex = function(t, k, v)
-                    if t.__map__[k] then
-                        table.remove(t.__vec__, t.__map__[k])
-                        t.__map__[k] = nil
-                        table.insert(t.__vec__, v)
-                        t.__map__[v] = #t.__vec__
-                    end
+                    t.__map__[k] = nil
+                    t.__map__[v] = true
                 end,
                 __add = function(v1, v2)
                     if v1.__map__[v2] then
-                        return v1.__vec__
+                        return v1.__map__[v2]
                     end
-                    table.insert(v1.__vec__, v2)
-                    v1.__map__[v2] = #v1.__vec__
-                    return v1.__vec__
+                    v1.__map__[v2] = true
+                    return v1.__map__
                 end,
                 __sub = function(v1, v2)
-                    for i, v in ipairs(v1.__vec__) do
-                        if v == v2 then
-                            table.remove(v1.__vec__, i)
-                            v1.__map__[v2] = nil
-                            break
-                        end
+                    if v1.__map__[v2] then
+                        v1.__map__[v2] = nil
                     end
-                    return v1.__vec__
+                    return v1.__map__
                 end
             }
         )

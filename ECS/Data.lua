@@ -1,11 +1,10 @@
 local Data = Class('Data')
 
-Data.EBindType = enum()
+Data.EBindType = Enum('Change', 'Set')
 
 function Data:Data()
     Property(self)
-    self._eventChange = {}
-    self._eventSet = {}
+    self._event = {}
     self._tagChange = {}
     self._tagSet = {}
 end
@@ -15,12 +14,14 @@ function Data:InitData(data)
         if self:IsProp(k) then
             self[k] = v
         else
-            self:addProp(k, v)
+            self:AddProp(k, v)
         end
     end
 end
 
 function Data:Bind(k, tag, callback, type)
+    type = type or Data.EBindType.Change
+
     self._event[type] = self._event[type] or {}
     if self._event[type][k] then
         self._event[type][k] = self._event[type][k] + callback
@@ -45,11 +46,11 @@ function Data:Unbind(...)
 end
 
 function Data:OnChange(key, ...)
-    self._eventChange[key][nil](...)
+    self._event[Data.EBindType.Change][key][nil](...)
 end
 
 function Data:OnSet(key, ...)
-    self._eventSet[key][nil](...)
+    self._event[Data.EBindType.Set][key][nil](...)
 end
 
 function Data:AddProp(k, v, get, set)

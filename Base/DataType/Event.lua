@@ -1,5 +1,5 @@
 local function InitEvent(tbl)
-    local mt = getmetatable(tbl)
+    local mt = getmetatable(tbl) or {}
     if not tbl.__event__ then
         tbl.__event__ = tbl.__event__ or {}
         local oldindex = mt.__index
@@ -37,10 +37,10 @@ local function InitEvent(tbl)
             end
         end
     end
+    setmetatable(tbl, mt)
 end
 
 local function AddEvent(tbl, e)
-    local mt = getmetatable(tbl) or {}
     if not tbl.__event__[e] then
         tbl.__event__[e] = {__map__ = {}}
         setmetatable(
@@ -73,8 +73,6 @@ local function AddEvent(tbl, e)
             }
         )
     end
-
-    setmetatable(tbl, mt)
 end
 
 function Event(tbl, e)

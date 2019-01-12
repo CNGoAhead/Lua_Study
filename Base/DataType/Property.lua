@@ -34,6 +34,30 @@ local function initPropTable(tbl)
             self.__props__[key] = encrypt(value)
         end
 
+        tbl.PropDecSet = function(self, name, newSet)
+            local prop = self.__propgss__['prop_' .. name]
+            if prop then
+                local oset = prop._Set or function(value)
+                    self:PropSet(name, newSet(value))
+                end
+                prop._Set = function(value)
+                    oset(newSet(value))
+                end
+            end
+        end
+
+        tbl.PropDecGet = function(self, name, newGet)
+            local prop = self.__propgss__['prop_' .. name]
+            if prop then
+                local oget = prop._Get or function()
+                    return self:PropGet(name)
+                end
+                prop._Get = function()
+                    return newGet(oget())
+                end
+            end
+        end
+
         -- 类似pairs
         tbl.PropPairs = function(self)
             return function(t, key)
@@ -135,8 +159,8 @@ local function NewProp(p)
         end
         return value
     end
+    return Prop
 end
-
 --p = {name = '', default = 0, flag = 'rw', OnSet = function() end, OnChange = function() end, Get = function() end, Set = function() end}
 function Property(tbl, p, ...)
     initPropTable(tbl)

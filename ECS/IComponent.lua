@@ -1,15 +1,15 @@
 local IComponent = Interface('IComponent')
 
 function IComponent:GetOwner()
-    return self._owner
+    return self.owner
 end
 
 function IComponent:BeAttached(owner)
-    self._owner = owner
+    self.owner = owner
 end
 
 function IComponent:BeDetached(owner)
-    self._owner = nil
+    self.owner = nil
 end
 
 return IComponent

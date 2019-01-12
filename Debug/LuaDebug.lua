@@ -120,11 +120,28 @@ local function getMouthlyRankEndTime()
     return os.time({year = y, month = m, day = 1, hour = 0, min = 0, sec = 0})
 end
 
+local Data = require('ECS.Data')
+
+local d = Data.new()
+
+d:AddProp('prop', 1)
+
+for i = 1, 10000 do
+    d:Bind('prop', i, function()
+        -- print(i)
+    end)
+end
+
+d.prop = 2
+
+print('----LOG----:unbind')
+
+d:Unbind('prop', 1)
+
+d.prop = 3
+
 while 1 do
-    for i = 1, 1000000 do
-        string.find("123123132526243563512341412", '.*2.*2.*2.*')
-    end
-    print('end')
+    print('----RUN----')
     -- local a = {1, nil, 2, nil, 3, nil}
     -- print(1 / 0, - 1 / 0, math.sqrt(-1))
     -- print(#a)

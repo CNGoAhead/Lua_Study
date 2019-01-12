@@ -1,12 +1,12 @@
 local Data = Class('Data')
 
-Data.EBindType = Enum('Change', 'Set')
+Data.EBindType = Enum({Change = '__Change__', Set = '__Set__'})
 
 function Data:Data()
     Property(self)
-    self._event = {}
+    self._event = {[Data.EBindType.Change] = {}, [Data.EBindType.Set] = {}}
     self._tagChange = {}
-    self._tagSet = {}
+    self._eventTag = {}
 end
 
 function Data:InitData(data)
@@ -19,26 +19,28 @@ function Data:InitData(data)
     end
 end
 
-function Data:Bind(k, tag, callback, type)
+function Data:Bind(k, tag, callback, callOnce, type)
     type = type or Data.EBindType.Change
+    assert(Data.EBindType.IsIn(type))
 
-    self._event[type] = self._event[type] or {}
     if self._event[type][k] then
         self._event[type][k] = self._event[type][k] + callback
-        local key = k .. tag .. callback .. type
-        self._eventTag[key] = self._eventTag[key] or {}
-        table.insert(self._eventTag[key], {k, tag, callback, type})
+        local key = '|' .. k .. '||' .. tostring(tag) .. '||' .. tostring(callback) .. '||' .. type .. '|'
+        self._eventTag[key] = {k, tag, callback, type}
+        if callOnce then
+            callback(self.k)
+        end
     end
 end
 
 function Data:Unbind(...)
-    local k = '.*'
-    for _, v in ipairs({...}) do
-        k = k .. v
+    assert(..., 'unbind what?')
+    local k = '.-'
+    for i, v in ipairs({...}) do
+        k = k .. '|' .. tostring(v) .. '|.-'
     end
-    k = k .. '.*'
     for key, value in pairs(self._eventTag) do
-        if string.find(key, k) then
+        if string.match(key, k) then
             self._event[value[4]][value[1]] = self._event[value[4]][value[1]] - value[3]
             self._eventTag[k] = nil
         end
@@ -58,8 +60,8 @@ function Data:AddProp(k, v, get, set)
         print('this property has exist')
     end
 
-    Event(self._eventChange, k)
-    Event(self._eventSet, k)
+    Event(self._event[Data.EBindType.Change], k)
+    Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Get = get, Set = set, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
 end
 
@@ -68,8 +70,8 @@ function Data:AddPropG(k, v, get)
         print('this property has exist')
     end
 
-    Event(self._eventChange, k)
-    Event(self._eventSet, k)
+    Event(self._event[Data.EBindType.Change], k)
+    Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Get = get, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
 end
 
@@ -78,8 +80,8 @@ function Data:AddPropS(k, v, set)
         print('this property has exist')
     end
 
-    Event(self._eventChange, k)
-    Event(self._eventSet, k)
+    Event(self._event[Data.EBindType.Change], k)
+    Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Set = set, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
 end
 
@@ -88,8 +90,8 @@ function Data:AddPropR(k, v, get)
         print('this property has exist')
     end
 
-    Event(self._eventChange, k)
-    Event(self._eventSet, k)
+    Event(self._event[Data.EBindType.Change], k)
+    Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'r', Get = get, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
 end
 

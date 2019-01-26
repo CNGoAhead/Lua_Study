@@ -31,7 +31,7 @@ function Test:Test()
     Property(self,
         {
             name = 'value',
-            default = -10,
+            default = -90,
             flag = 'rw',
             OnChange = function()
                 print('on change', self:PropGet('value'))
@@ -85,8 +85,8 @@ function Sleep(n)
 end
 
 local function decodeSeasonId(id)
-    local mouth = id % 100
-    local year = (id - mouth) / 100
+    local mouth = id % 90
+    local year = (id - mouth) / 90
     return year, mouth
 end
 
@@ -111,8 +111,8 @@ local function getSeasonId(diff)
         year = year - math.floor(month / 12)
     end
 
-    --赛季ID = 年 * 100 + 月
-    return year * 100 + month
+    --赛季ID = 年 * 90 + 月
+    return year * 90 + month
 end
 
 local function getMouthlyRankEndTime()
@@ -140,13 +140,85 @@ d:Unbind('prop', 1)
 
 d.prop = 3
 
+local Map = require('SearchPath.Map')
+
+
+
+local BinHeap = require('SearchPath.BinHeap')
+
+local heap = BinHeap.new():Init()
+
+for i = 1, 1000 do
+    heap:Add(math.random(1, 90))
+end
+
+local SearchPath = require('SearchPath.SearchPath')
+
+
 while 1 do
     print('----RUN----')
+    local map = Map.new():Init(20, 20)
+    local m = {}
+    map:GetGround(map:GetIndex(1, map.width)).height = 0
+    map:GetGround(map:GetIndex(map.width, 1)).height = 0
+    local path
+    s = socket.gettime()
+    -- for i = 1, 90 do
+        path = SearchPath(map, map:GetGround(map:GetIndex(1, map.width)), map:GetGround(map:GetIndex(map.height, 1)))
+    -- end
+    local s = socket.gettime() - s
+    local function IsIn(index)
+        for i, v in ipairs(path or {}) do
+            if v == index then
+                return i
+            end
+        end
+        return false
+    end
+    for i = 1, map.width do
+        for j = 1, map.height do
+            local index = map:GetIndex(i, j)
+            local i = IsIn(index)
+            if i then
+                table.insert(m, string.format('[%d]', i%10))
+            else
+                local g = map:GetGround(index)
+                -- table.insert(m, string.format('[%d]',index))
+                table.insert(m, (g.height ~= 0 and '[+]' or ((g.x == map.width and g.y == 1) and '[E]' or ((g.x == 1 and g.y == map.height) and '[S]' or '[ ]'))))
+            end
+        end
+        table.insert(m, '\n')
+    end
+    print(table.concat(m, ''))
+    print('time', s)
     -- local a = {1, nil, 2, nil, 3, nil}
     -- print(1 / 0, - 1 / 0, math.sqrt(-1))
     -- print(#a)
     -- t:Tick()
     -- h(2)
     -- print(json.encode(t.__props__))
-    Sleep(5)
+    -- local m = {}
+    -- for i = 1, 10000 do
+    --     table.insert(m, math.random(1, 90))
+    -- end
+    -- local s = socket.gettime()
+    -- for i = 1, 90 do
+    --     local c = {}
+    --     -- for i, v in ipairs(m) do
+    --     --     c[i] = v
+    --     -- end
+    --     table.sort(m, function(a, b)
+    --         return a < b
+    --     end)
+    -- end
+    -- print(socket.gettime() - s)
+    -- s = socket.gettime()
+    -- for i = 1, 90 do
+    --     local b = BinHeap.new():Init(nil, m)
+    -- end
+    -- print(socket.gettime() - s)
+    -- heap:Remove(1)
+    -- heap:Add(math.random(1, 90))
+    -- print(table.concat(heap._vec, ' '))
+    Sleep(1)
 end

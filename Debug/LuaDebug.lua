@@ -3,7 +3,7 @@ function Sleep(n)
    socket.select(nil, nil, n)
 end
 local alien = require('alien')
-local nav = alien.load('LuaCall.dll')
+local nav = alien.load('Navigation.dll')
 
 local Init = nav.Init
 Init:types('void', 'int', 'int', 'pointer')

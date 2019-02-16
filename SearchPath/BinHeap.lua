@@ -41,23 +41,19 @@ function BinHeap:OnAdd(index)
 end
 
 function BinHeap:OnRemove(index)
-    local next
     local cindex
-    cindex = index * 2 + 1
-    if cindex <= self._size then
-        self:OnRemove(cindex)
-
+    local indexL, indexR
+    indexL = index * 2
+    indexR = index * 2 + 1
+    if indexL <= self._size and indexR <= self._size then
+        cindex = self._compare(self._vec[indexL], self._vec[indexR]) and indexL or indexR
+    elseif indexL <= self._size then
+        cindex = indexL
+    else
+        return
     end
-    cindex = index * 2
-    if cindex <= self._size then
-        self:OnRemove(cindex)
-    end
-    cindex = math.floor(index / 2)
-    if index > 1 then
-        if self._compare(self._vec[index], self._vec[cindex]) then
-            self._vec[index], self._vec[cindex] = self._vec[cindex], self._vec[index]
-        end
-    end
+    self:OnAdd(index)
+    self:OnRemove(cindex)
 end
 
 function BinHeap:Get(i)

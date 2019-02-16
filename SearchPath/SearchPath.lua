@@ -73,8 +73,10 @@ local function printPath(map, path)
     Sleep(0.5)
 end
 
-local function Search(map, cur, target, path, close, walk, heap, repeatClose)
-    repeatClose = repeatClose or {}
+local function Search(map, cur, target, path, close, walk, heap, moveClose)
+    if #path >= map.width + map.height then
+        return path
+    end
     if cur == target then
         return path
     end
@@ -102,7 +104,9 @@ local function Search(map, cur, target, path, close, walk, heap, repeatClose)
         local first = near:Get()
         local index = first.index
         local ground = map:GetGround(index)
-        if ground.height ~= 0 or close[index] then
+        local curIndex = map:GetIndex(cur.x, cur.y)
+        local moveIndex = curIndex > index and string.format('%8d%8d', curIndex, index) or string.format('%8d%8d', index, curIndex)
+        if ground.height ~= 0 or close[index] or moveClose[moveIndex] then
             near:Remove(1)
         else
             local newPath = Clone(path)
@@ -113,13 +117,10 @@ local function Search(map, cur, target, path, close, walk, heap, repeatClose)
             local newDistance = first.distance
             heap:Add({cur = ground, path = newPath, close = newClose, distance = newDistance, walk = walk + newWalk})
             close[index] = true
-            -- for i, v in heap:Ipairs() do
-            --     v.close[index] = true
-            -- end
+            moveClose[moveIndex] = true
             local t = heap:Get()
-            -- print('----Add----', newDistance + walk + newWalk)
             -- printPath(map, newPath)
-            local ret = Search(map, t.cur, target, t.path, t.close, t.walk, heap)
+            local ret = Search(map, t.cur, target, t.path, t.close, t.walk, heap, moveClose)
             if ret then
                 return ret
             else
@@ -131,7 +132,7 @@ local function Search(map, cur, target, path, close, walk, heap, repeatClose)
     heap:Remove(1)
     local t = heap:Get()
     if t then
-        return Search(map, t.cur, target, t.path, t.close, t.walk, heap)
+        return Search(map, t.cur, target, t.path, t.close, t.walk, heap, moveClose)
     else
         return false
     end
@@ -142,6 +143,7 @@ local function SearchPath(map, begin, over)
     local closeIndex = {[index] = true}
     local path = {index}
     local distance = ExpectDistance(begin, over)
+    local moveClose = {}
     local heap = BinHeap.new():Init(function(a, b)
         local la = a.distance + a.walk
         local lb = b.distance + b.walk
@@ -151,7 +153,7 @@ local function SearchPath(map, begin, over)
             return la < lb
         end
     end, {cur = begin, path = path, close = closeIndex, distance = distance, walk = 0})
-    return Search(map, begin, over, path, closeIndex, 0, heap)
+    return Search(map, begin, over, path, closeIndex, 0, heap, moveClose)
 end
 
 return SearchPath

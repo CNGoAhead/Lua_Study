@@ -30,6 +30,12 @@ local function InitEvent(tbl)
         end
         mt.__newindex = function(t, k, v)
             if t.__event__[k] then
+                if type(v) == 'function' then
+                    t.__event__[k]:Clear()
+                    t.__event__[k]:Add(v)
+                else
+                    t.__event__[k] = v
+                end
             elseif oldnewindex then
                 oldnewindex(t, k, v)
             else
@@ -42,33 +48,62 @@ end
 
 local function AddEvent(tbl, e)
     if not tbl.__event__[e] then
-        tbl.__event__[e] = {__map__ = {}}
+        tbl.__event__[e] = {
+            __map__ = {},
+            Call = function(self, ...)
+                local map = rawget(self, '__map__')
+                for foo, _ in pairs(map) do
+                    foo(...)
+                end
+            end,
+            Clear = function(self)
+                local map = rawget(self, '__map__')
+                if map then
+                    for k, _ in pairs(map) do
+                        map[k] = nil
+                    end
+                end
+                return self
+            end,
+            Add = function(self, v)
+                local map = rawget(self, '__map__')
+                if map then
+                    map[v] = true
+                end
+                return self
+            end,
+            Remove = function(self, v)
+                local map = rawget(self, '__map__')
+                if map then
+                    map[v] = nil
+                end
+                return self
+            end
+        }
         setmetatable(
             tbl.__event__[e],
             {
                 __index = function(t, k)
-                    return function(...)
-                        for foo, _ in pairs(t.__map__) do
-                            foo(...)
+                    if k ~= '__map__' then
+                        local v = rawget(t, k)
+                        if v then
+                            return v
+                        else
+                            local map = rawget(t, '__map__')
+                            return map[k]
                         end
                     end
                 end,
                 __newindex = function(t, k, v)
-                    t.__map__[k] = nil
-                    t.__map__[v] = true
+                    local map = rawget(t, '__map__')
+                    map[k] = nil
+                    map[v] = true
                 end,
                 __add = function(v1, v2)
-                    if v1.__map__[v2] then
-                        return v1.__map__[v2]
-                    end
-                    v1.__map__[v2] = true
-                    return v1.__map__
+                    return v1:Add(v2)
                 end,
                 __sub = function(v1, v2)
-                    if v1.__map__[v2] then
-                        v1.__map__[v2] = nil
-                    end
-                    return v1.__map__
+                    return v1:Remove(v2)
                 end
             }
         )

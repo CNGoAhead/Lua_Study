@@ -2,11 +2,15 @@ local Data = Class('Data')
 
 Data.EBindType = Enum({Change = '__Change__', Set = '__Set__'})
 
+Data.EBindKey = Enum({Any = '__Any__'})
+
 function Data:Data()
     Property(self)
     self._event = {[Data.EBindType.Change] = {}, [Data.EBindType.Set] = {}}
     self._tagChange = {}
     self._eventTag = {}
+    Event(self._event[Data.EBindType.Change], Data.EBindKey.Any)
+    Event(self._event[Data.EBindType.Set], Data.EBindKey.Any)
 end
 
 function Data:InitData(data)
@@ -48,11 +52,13 @@ function Data:Unbind(...)
 end
 
 function Data:OnChange(key, ...)
-    self._event[Data.EBindType.Change][key][nil](...)
+    self._event[Data.EBindType.Change][key]:Call(...)
+    self._event[Data.EBindType.Change][Data.EBindKey.Any]:Call(...)
 end
 
 function Data:OnSet(key, ...)
-    self._event[Data.EBindType.Set][key][nil](...)
+    self._event[Data.EBindType.Set][key]:Call(...)
+    self._event[Data.EBindType.Set][Data.EBindKey.Any]:Call(...)
 end
 
 function Data:AddProp(k, v, get, set)
@@ -63,6 +69,8 @@ function Data:AddProp(k, v, get, set)
     Event(self._event[Data.EBindType.Change], k)
     Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Get = get, Set = set, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
+    self:OnChange(k, v)
+    self:OnSet(k, v)
 end
 
 function Data:AddPropG(k, v, get)
@@ -73,6 +81,8 @@ function Data:AddPropG(k, v, get)
     Event(self._event[Data.EBindType.Change], k)
     Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Get = get, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
+    self:OnChange(k, v)
+    self:OnSet(k, v)
 end
 
 function Data:AddPropS(k, v, set)
@@ -83,6 +93,8 @@ function Data:AddPropS(k, v, set)
     Event(self._event[Data.EBindType.Change], k)
     Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'rw', Set = set, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
+    self:OnChange(k, v)
+    self:OnSet(k, v)
 end
 
 function Data:AddPropR(k, v, get)
@@ -93,6 +105,8 @@ function Data:AddPropR(k, v, get)
     Event(self._event[Data.EBindType.Change], k)
     Event(self._event[Data.EBindType.Set], k)
     Property(self, {name = k, default = v, flag = 'r', Get = get, OnChange = Handler(self.OnChange, self, k), OnSet = Handler(self.OnSet, self, k)})
+    self:OnChange(k, v)
+    self:OnSet(k, v)
 end
 
 return Data

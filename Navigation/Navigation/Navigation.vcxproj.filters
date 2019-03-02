@@ -51,12 +51,15 @@
     <ClInclude Include="Navigation\Private\Navigation.h">
       <Filter>头文件\Navigation\Private</Filter>
     </ClInclude>
+    <ClInclude Include="Navigation\Private\Distance.h">
+      <Filter>头文件\Navigation\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Navigation\Private\AStarNavigation.h">
+      <Filter>头文件\Navigation\Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Navigation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
@@ -67,6 +70,15 @@
     </ClCompile>
     <ClCompile Include="Navigation\Private\Map.cpp">
       <Filter>头文件\Navigation\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Navigation\Private\Distance.cpp">
+      <Filter>头文件\Navigation\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Navigation\Private\AStarNavigation.cpp">
+      <Filter>头文件\Navigation\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="DllExport.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Navigation\Private\Navigation.cpp">
       <Filter>头文件\Navigation\Private</Filter>

@@ -6,24 +6,39 @@
 #include <memory>
 #include <algorithm>
 #include <queue>
-#include "IMap.h"
-#include "IDistance.h"
 
-template<typename M = IMap, typename D = IDistance>
+template<typename M, typename D>
 class INavigation
 {
 public:
-	virtual INavigation * Init(std::shared_ptr<M> map) = 0;
+	using ptrM = std::shared_ptr<M>;
+	using ptrD = std::shared_ptr<D>;
 
-	virtual INavigation * AddOpen(std::priority_queue<std::shared_ptr<D>>& open, std::shared_ptr<D>& o) = 0;
+	struct Campare
+	{
+		bool operator()(const D & a, const D & b) {
+			return a > b;
+		}
+		bool operator()(const std::shared_ptr<D> & a, const std::shared_ptr<D> & b) {
+			return (*a) > (*b);
+		}
+	};
 
-	virtual INavigation * AddClose(std::unordered_set<long long>& close, int index1, int index2 = -1) = 0;
+	virtual INavigation * Init(std::shared_ptr<M> & map) = 0;
 
-	virtual bool IsInClose(std::unordered_set<long long>& close, int index1, int index2 = -1) = 0;
+	virtual std::shared_ptr<M> & GetMap() = 0;
+
+	virtual INavigation * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, INavigation<M, D>::Campare> & open, std::shared_ptr<D> & o) = 0;
+
+	virtual INavigation * AddClose(std::unordered_set<int>& close, int index1, int index2 = -1) = 0;
+
+	virtual bool IsInClose(std::unordered_set<int>& close, int index1, int index2 = -1) = 0;
 
 	virtual int ExpectDistance(int index1, int index2) = 0;
 
 	virtual int CalcuDistance(int index1, int index2, int dps, int speed) = 0;
+
+	virtual INavigation * ClearMoveGroundHeight(std::vector<int> & path) = 0;
 
 	virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
 

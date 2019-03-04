@@ -68,7 +68,7 @@ local function InitClass(class, supers)
     end
 end
 
-function Class(className, ...)
+local function Class(className, ...)
     PreAssertClass(className, ...)
     local supers = {...}
     local class = {__class__ = className, __super__ = supers}
@@ -77,3 +77,5 @@ function Class(className, ...)
     InitClass(class, supers)
     return class
 end
+
+return Class

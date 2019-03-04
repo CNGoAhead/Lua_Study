@@ -1,4 +1,4 @@
-function Enum(...)
+local function Enum(...)
     local enumElements
     if type(...) ~= "table" then    --允许enum("EnumType1", "EnumType2")的使用形式
         enumElements = {...}
@@ -57,3 +57,5 @@ function Enum(...)
     })
     return e
 end
+
+return Enum

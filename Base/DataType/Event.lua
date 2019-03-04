@@ -110,8 +110,10 @@ local function AddEvent(tbl, e)
     end
 end
 
-function Event(tbl, e)
+local function Event(tbl, e)
     InitEvent(tbl)
     AddEvent(tbl, e)
     return tbl
 end
+
+return Event

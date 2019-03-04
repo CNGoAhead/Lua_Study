@@ -15,7 +15,7 @@ local function PreAssertInterface(interfaceName, ...)
         end
         assert(
             count == 0,
-            stirng.format("%s can't have more than one super with a create function\n", interfaceName)
+            string.format("%s can't have more than one super with a create function\n", interfaceName)
         )
     end
 end
@@ -25,7 +25,7 @@ local function MergeInterface(interface, supers)
         for k, v in pairs(t) do
             assert(
                 type(v) == 'function',
-                string.format("interface just inherit function") 
+                string.format("interface just inherit function")
             )
             assert(
                 interface[k] == nil,
@@ -36,10 +36,12 @@ local function MergeInterface(interface, supers)
     end
 end
 
-function Interface(interfaceName, ...)
+local function Interface(interfaceName, ...)
     PreAssertInterface(interfaceName, ...)
     local supers = {...}
     local interface = {__class__ = interfaceName, __super__ = supers}
     MergeInterface(interface, supers)
     return interface
 end
+
+return Interface

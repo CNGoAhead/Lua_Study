@@ -73,7 +73,7 @@ local function initPropTable(tbl)
             self.__props__
         end
 
-        -- 
+        -- 判断该字段是否是属性
         tbl.IsProp = function(self, name)
             return self.__propgss__['prop_' .. name] ~= nil
         end
@@ -162,7 +162,7 @@ local function NewProp(p)
     return Prop
 end
 --p = {name = '', default = 0, flag = 'rw', OnSet = function() end, OnChange = function() end, Get = function() end, Set = function() end}
-function Property(tbl, p, ...)
+local function Property(tbl, p, ...)
     initPropTable(tbl)
     if p then
         tbl.__props__['_' .. p.name] = encrypt(p.default)
@@ -176,3 +176,5 @@ function Property(tbl, p, ...)
         Property(tbl, ...)
     end
 end
+
+return Property

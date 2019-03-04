@@ -1,4 +1,4 @@
-function Is(obj, className)
+local function Is(obj, className)
     if obj.__class__ and obj.__super__ then
         obj.__is_map__ = obj.__is_map__ or {}
 
@@ -22,9 +22,11 @@ function Is(obj, className)
     return false
 end
 
-function As(obj, className)
+local function As(obj, className)
     if not obj.__is_map__ or obj.__is_map__[className] == nil then
         Is(obj, className)
     end
     return obj.__is_map__[className] or nil
 end
+
+return Is, As

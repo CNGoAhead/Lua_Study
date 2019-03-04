@@ -16,18 +16,18 @@ public:
 	~Distance() {
 	};
 
-	virtual IDistance * Init(int index, int w, int l, std::shared_ptr<IDistance> last = nullptr);
+	virtual Distance * Init(int index, int w, int l, std::shared_ptr<IDistance> last = nullptr);
 	virtual bool operator<(const IDistance & b) const;
 	virtual bool operator>(const IDistance & b) const;
 	virtual bool operator==(const IDistance & b) const;
-	virtual IDistance & operator+=(const IDistance & b);
+	virtual Distance & operator+=(const IDistance & b);
 	virtual std::shared_ptr<IDistance> GetLast();
 	virtual int GetIndex() const;
 	virtual int GetWalk() const;
 	virtual int GetLeft() const;
-	virtual IDistance * SetLast(std::shared_ptr<IDistance> last);
-	virtual IDistance * SetWalk(int w);
-	virtual IDistance * SetLeft(int l);
+	virtual Distance * SetLast(std::shared_ptr<IDistance> last);
+	virtual Distance * SetWalk(int w);
+	virtual Distance * SetLeft(int l);
 
 private:
 
@@ -39,7 +39,7 @@ private:
 };
 
 
-inline IDistance * Distance::Init(int index, int w, int l, std::shared_ptr<IDistance> last /*= nullptr*/)
+inline Distance * Distance::Init(int index, int w, int l, std::shared_ptr<IDistance> last /*= nullptr*/)
 {
 	_index = index;
 	_w = w;
@@ -69,9 +69,8 @@ inline bool Distance::operator==(const IDistance & b) const
 	return _l + _w == b.GetLeft() + b.GetWalk();
 }
 
-inline IDistance & Distance::operator+=(const IDistance & b)
+inline Distance & Distance::operator+=(const IDistance & b)
 {
-	_l = b.GetLeft();
 	_w += b.GetWalk();
 	return *this;
 }
@@ -96,19 +95,19 @@ inline int Distance::GetLeft() const
 	return _l;
 }
 
-inline IDistance * Distance::SetLast(std::shared_ptr<IDistance> last)
+inline Distance * Distance::SetLast(std::shared_ptr<IDistance> last)
 {
 	_last = last;
 	return this;
 }
 
-inline IDistance * Distance::SetWalk(int w)
+inline Distance * Distance::SetWalk(int w)
 {
 	_w = w;
 	return this;
 }
 
-inline IDistance * Distance::SetLeft(int l)
+inline Distance * Distance::SetLeft(int l)
 {
 	_l = l;
 	return this;

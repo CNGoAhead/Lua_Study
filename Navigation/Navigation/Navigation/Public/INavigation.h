@@ -14,7 +14,7 @@ public:
 	using ptrM = std::shared_ptr<M>;
 	using ptrD = std::shared_ptr<D>;
 
-	struct Campare
+	struct Compare
 	{
 		bool operator()(const D & a, const D & b) {
 			return a > b;
@@ -26,9 +26,9 @@ public:
 
 	virtual INavigation * Init(std::shared_ptr<M> & map) = 0;
 
-	virtual std::shared_ptr<M> & GetMap() = 0;
+	virtual std::shared_ptr<M> GetMap() = 0;
 
-	virtual INavigation * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, INavigation<M, D>::Campare> & open, std::shared_ptr<D> & o) = 0;
+	virtual INavigation * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, INavigation<M, D>::Compare> & open, std::shared_ptr<D> & o) = 0;
 
 	virtual INavigation * AddClose(std::unordered_set<int>& close, int index1, int index2 = -1) = 0;
 
@@ -44,7 +44,7 @@ public:
 
 	virtual std::vector<int> FlagSearch(int sx, int sy, int flag, int dps, int speed, int duration = 0) = 0;
 
-	virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> ends, int dps, int speed, int duration = 0) = 0;
+	virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = 0) = 0;
 
 	virtual std::vector<int> ResumeSearch(int searchId) = 0;
 };

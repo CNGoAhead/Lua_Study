@@ -12,7 +12,7 @@ public:
 	virtual bool operator>(const IDistance & b) const = 0;
 	virtual bool operator==(const IDistance & b) const = 0;
 	virtual IDistance & operator+=(const IDistance & b) = 0;
-	//virtual std::shared_ptr<IDistance> GetLast() = 0;
+	virtual std::shared_ptr<IDistance> GetLast() = 0;
 	virtual int GetIndex() const = 0;
 	virtual int GetWalk() const = 0;
 	virtual int GetLeft() const = 0;

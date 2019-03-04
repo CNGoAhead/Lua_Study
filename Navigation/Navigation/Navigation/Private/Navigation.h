@@ -9,18 +9,20 @@ public:
 	using ptrM = std::shared_ptr<M>;
 	using ptrD = std::shared_ptr<D>;
 
+	typedef INavigation<M, D>::Compare Compare;
+
 	Navigation() : INavigation<M, D>(), _map(nullptr) {
 	};
 	virtual ~Navigation() {
 	};
 
-	virtual INavigation<M, D> * Init(std::shared_ptr<M> & map);
+	virtual Navigation<M, D> * Init(std::shared_ptr<M> & map);
 
-	virtual std::shared_ptr<M> & GetMap();
+	virtual std::shared_ptr<M> GetMap();
 
-	virtual INavigation<M, D> * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, INavigation<M, D>::Campare> & open, std::shared_ptr<D> & o);
+	virtual Navigation<M, D> * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D> & o);
 
-	virtual INavigation<M, D> * AddClose(std::unordered_set<int> & close, int index1, int index2 = -1);
+	virtual Navigation<M, D> * AddClose(std::unordered_set<int> & close, int index1, int index2 = -1);
 
 	virtual bool IsInClose(std::unordered_set<int> & close, int index1, int index2 = -1);
 
@@ -28,15 +30,7 @@ public:
 
 	virtual int CalcuDistance(int index1, int index2, int dps, int speed);
 
-	virtual INavigation<M, D> * ClearMoveGroundHeight(std::vector<int> & path);
-
-	virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration) = 0;
-
-	virtual std::vector<int> FlagSearch(int sx, int sy, int flag, int dps, int speed, int duration) = 0;
-
-	virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> ends, int dps, int speed, int duration) = 0;
-
-	virtual std::vector<int> ResumeSearch(int searchId) = 0;
+	virtual Navigation<M, D> * ClearMoveGroundHeight(std::vector<int> & path);
 
 private:
 
@@ -45,27 +39,27 @@ private:
 };
 
 template<typename M , typename D>
-std::shared_ptr<M> & Navigation<M, D>::GetMap()
+std::shared_ptr<M> Navigation<M, D>::GetMap()
 {
 	return _map;
 }
 
 template<typename M, typename D>
-inline INavigation<M, D> * Navigation<M, D>::Init(std::shared_ptr<M> & map)
+inline Navigation<M, D> * Navigation<M, D>::Init(std::shared_ptr<M> & map)
 {
 	_map = map;
 	return this;
 }
 
 template<typename M, typename D>
-inline INavigation<M, D> * Navigation<M, D>::AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, INavigation<M, D>::Campare> & open, std::shared_ptr<D>& o)
+inline Navigation<M, D> * Navigation<M, D>::AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D>& o)
 {
 	open.push(o);
 	return this;
 }
 
 template<typename M, typename D>
-inline INavigation<M, D> * Navigation<M, D>::AddClose(std::unordered_set<int>& close, int index1, int index2)
+inline Navigation<M, D> * Navigation<M, D>::AddClose(std::unordered_set<int>& close, int index1, int index2)
 {
 	if (index2 == -1)
 		close.insert(index1);
@@ -112,7 +106,7 @@ inline int Navigation<M, D>::CalcuDistance(int index1, int index2, int dps, int 
 }
 
 template<typename M, typename D>
-inline INavigation<M, D> * Navigation<M, D>::ClearMoveGroundHeight(std::vector<int> & path)
+inline Navigation<M, D> * Navigation<M, D>::ClearMoveGroundHeight(std::vector<int> & path)
 {
 	for (auto p : path)
 	{

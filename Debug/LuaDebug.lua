@@ -1,19 +1,28 @@
 require("socket")
-function Sleep(n)
+local function Sleep(n)
    socket.select(nil, nil, n)
 end
 local alien = require('alien')
+local nav1 = alien.load('Navigation1.dll')
 local nav = alien.load('Navigation.dll')
 
+local Init1 = nav1.Init
+Init1:types('void', 'int', 'int', 'pointer')
+local Search1 = nav1.Search
+Search1:types('int', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int')
+
 local Init = nav.Init
-Init:types('void', 'int', 'int', 'pointer')
+Init:types('void', 'int', 'int', 'pointer', 'int', 'pointer', 'int')
 local Search = nav.Search
 Search:types('int', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int')
 
 local width = 42
 local height = 42
 local array = alien.array('int', width * height)
-
+local hs = alien.array('int', width * height * 3)
+local fs = alien.array('int', {math.random(0, width - 1), math.random(0, height - 1), 1})
+local hl = 0
+local fl = 1
 local map = {
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,00,00,99,00,00,00,00, 
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,00,00,99,00,00,00,00, 
@@ -60,9 +69,16 @@ local map = {
 }
 for i, v in ipairs(map) do
     array[i] = map[i] -- math.max(math.random(0, 1000) - 800, 0) / 2
+    if map[i] > 0 then
+        hs[hl * 3 + 1] = (i - 1) % width
+        hs[hl * 3 + 2] = math.floor((i - 1) / width)
+        hs[hl * 3 + 3] = map[i]
+        hl = hl + 1
+    end
 end
 
-Init(width, height, array.buffer)
+Init1(width, height, array.buffer)
+Init(width, height, hs.buffer, hl, fs.buffer, fl)
 
 local x = {}
 local y = {}
@@ -87,7 +103,16 @@ while 1 do
     -- local ex = width - 1
     -- local ey = height - 1
     print(sx, sy, ex, ey)
-    -- local s = socket.gettime()
+    local s = socket.gettime()
+    local len = Search1(array.buffer, sx, sy, ex, ey, 1, 1)
+    -- local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
+    -- print(socket.gettime() - s)
+    local t = {}
+    for i=1, len do
+        table.insert(t, array[i])
+    end
+    print(table.concat(t, ","))
+
     local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
     -- local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
     -- print(socket.gettime() - s)
@@ -96,6 +121,7 @@ while 1 do
         table.insert(t, array[i])
     end
     print(table.concat(t, ","))
+
     count = count + 1
     -- Sleep(1)
     if count ~= 0 and count % 1000 == 0 then

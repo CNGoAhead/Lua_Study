@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <queue>
+#include <functional>
 
 template<typename M, typename D>
 class INavigation
@@ -13,12 +14,13 @@ class INavigation
 public:
 	using ptrM = std::shared_ptr<M>;
 	using ptrD = std::shared_ptr<D>;
+	//using Compare = typename std::greater<D>;
 
 	struct Compare
 	{
-		bool operator()(const D & a, const D & b) {
+		/*bool operator()(const D & a, const D & b) {
 			return a > b;
-		}
+		}*/
 		bool operator()(const std::shared_ptr<D> & a, const std::shared_ptr<D> & b) {
 			return (*a) > (*b);
 		}
@@ -42,9 +44,9 @@ public:
 
 	virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
 
-	virtual std::vector<int> FlagSearch(int sx, int sy, int flag, int dps, int speed, int duration = 0) = 0;
+	virtual std::vector<int> FlagSearch(int sx, int sy, short flag, int dps, int speed, int duration = 0) = 0;
 
 	virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = 0) = 0;
 
-	virtual std::vector<int> ResumeSearch(int searchId) = 0;
+	virtual std::vector<int> ResumeSearch(int searchId, int etime) = 0;
 };

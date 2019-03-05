@@ -2,6 +2,8 @@
 
 #include "..\Public\IMap.h"
 #include <memory>
+#include <string>
+#include <sstream>
 
 template<typename G = IGround>
 class Map : public IMap<G>
@@ -15,6 +17,8 @@ public:
 	};
 
 	static int GetIndex(int w, int x, int y);
+
+	std::string ToString(const std::vector<int> & path) const;
 
 	virtual Map * Init(int w, int h, std::unordered_map<int, int> height = std::unordered_map<int, int>(), std::unordered_map<int, short> flag = std::unordered_map<int, short>());
 	virtual Map * UpdateHeight(const std::unordered_map<int, int> & difh);
@@ -38,6 +42,32 @@ private:
 	std::vector<std::shared_ptr<G>> _grounds;
 
 };
+
+template<typename G /*= IGround*/>
+std::string Map<G>::ToString(const std::vector<int> & path) const
+{
+	std::unordered_map<int, int> p;
+	int c = 0;
+	for (auto i : path)
+		p[i] = ++c % 10;
+	std::stringstream ss;
+	for (int y = 0; y < _h; y++)
+	{
+		for (int x = 0; x < _w; x++)
+		{
+			int index = GetIndex(x, y);
+			char l = '[', r = ']';
+			if (_grounds[index]->GetHeight() > 0)
+				l = '{', r = '}';
+			if (p.find(index) != p.end())
+				ss << l << p[index] << r;
+			else
+				ss << l << " " << r;
+		}
+		ss << std::endl;
+	}
+	return ss.str();
+}
 
 template<typename G>
 inline Map<G> * Map<G>::SubFlag(const std::unordered_map<int, short> & difg)

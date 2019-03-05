@@ -6,10 +6,10 @@ template<typename M, typename D>
 class Navigation : public INavigation<M, D>
 {
 public:
-	using ptrM = std::shared_ptr<M>;
-	using ptrD = std::shared_ptr<D>;
+	using ptrM = typename INavigation<M, D>::ptrM;
+	using ptrD = typename INavigation<M, D>::ptrD;
+	using Compare = typename INavigation<M, D>::Compare;
 
-	typedef INavigation<M, D>::Compare Compare;
 
 	Navigation() : INavigation<M, D>(), _map(nullptr) {
 	};
@@ -108,11 +108,11 @@ inline int Navigation<M, D>::CalcuDistance(int index1, int index2, int dps, int 
 template<typename M, typename D>
 inline Navigation<M, D> * Navigation<M, D>::ClearMoveGroundHeight(std::vector<int> & path)
 {
-	for (auto p : path)
-	{
-		auto g = _map->GetGround(p);
-		if (g && g->GetHeight() > 0)
-			g->SetHeight(0);
-	}
+	//for (auto p : path)
+	//{
+	//	auto g = _map->GetGround(p);
+	//	if (g && g->GetHeight() > 0)
+	//		g->SetHeight(0);
+	//}
 	return this;
 }

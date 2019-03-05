@@ -50,18 +50,22 @@ inline Distance * Distance::Init(int index, int w, int l, std::shared_ptr<IDista
 
 inline bool Distance::operator<(const IDistance & b) const
 {
-	if (*this == b)
+	int la = _l + _w;
+	int lb = b.GetLeft() + b.GetWalk();
+	if (la == lb)
 		return _l < b.GetLeft();
 	else
-		return _l + _w < b.GetLeft() + b.GetWalk();
+		return la < lb;
 }
 
 inline bool Distance::operator>(const IDistance & b) const
 {
-	if (*this == b)
+	int la = _l + _w;
+	int lb = b.GetLeft() + b.GetWalk();
+	if (la == lb)
 		return _l > b.GetLeft();
 	else
-		return _l + _w > b.GetLeft() + b.GetWalk();
+		return la > lb;
 }
 
 inline bool Distance::operator==(const IDistance & b) const

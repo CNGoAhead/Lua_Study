@@ -161,7 +161,7 @@ std::shared_ptr<D> AStarNavigation<M, D>::MultiSearch(int sindex, std::unordered
 {
 	auto cur = open.top();
 	sindex = cur->GetIndex();
-	while (eindexs.find(sindex) != eindexs.end() && ::GetTickCount() > etime)
+	while (eindexs.find(sindex) == eindexs.end() && (etime <= 0 || ::GetTickCount() > etime))
 	{
 		cur = BFS(sindex, eindexs, dps, speed, open, close, minMap);
 		if (!cur)
@@ -312,7 +312,10 @@ std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, short flag, int dps, i
 	for (auto c : v)
 	{
 		if (Navigation<M, D>::GetMap()->GetGround(c->GetIndex())->HasFlag(flag))
+		{
+			c->SetLast(otop);
 			return c;
+		}
 		AddOpen(open, otop, c, minMap);
 		Navigation<M, D>::AddClose(close, sindex, c->GetIndex());
 	}
@@ -424,7 +427,10 @@ std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, std::unordered_set<int
 	for (auto c : v)
 	{
 		if (eindexs.find(c->GetIndex()) != eindexs.end())
+		{
+			c->SetLast(otop);
 			return c;
+		}
 		AddOpen(open, otop, c, minMap);
 		Navigation<M, D>::AddClose(close, sindex, c->GetIndex());
 	}

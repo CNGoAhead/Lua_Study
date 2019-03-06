@@ -58,4 +58,6 @@ local function Enum(...)
     return e
 end
 
-return Enum
+return function()
+    return Enum
+end

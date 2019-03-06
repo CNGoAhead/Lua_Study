@@ -29,4 +29,6 @@ local function As(obj, className)
     return obj.__is_map__[className] or nil
 end
 
-return Is, As
+return function()
+    return Is, As
+end

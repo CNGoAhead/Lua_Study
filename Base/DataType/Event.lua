@@ -116,4 +116,6 @@ local function Event(tbl, e)
     return tbl
 end
 
-return Event
+return function()
+    return Event
+end

@@ -177,4 +177,6 @@ local function Property(tbl, p, ...)
     end
 end
 
-return Property
+return function()
+    return Property
+end

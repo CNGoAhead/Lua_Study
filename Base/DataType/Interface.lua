@@ -44,4 +44,6 @@ local function Interface(interfaceName, ...)
     return interface
 end
 
-return Interface
+return function()
+    return Interface
+end

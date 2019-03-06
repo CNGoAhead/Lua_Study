@@ -14,4 +14,6 @@ local function Handler(func, param, ...)
     end
 end
 
-return Handler
+return function()
+    return Handler
+end

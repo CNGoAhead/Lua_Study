@@ -1,28 +1,59 @@
+local Nav, NavSys = require('Nav.Nav')()
+
 require("socket")
 local function Sleep(n)
-   socket.select(nil, nil, n)
+socket.select(nil, nil, n)
 end
+
 local alien = require('alien')
 -- local nav1 = alien.load('Navigation1.dll')
-local nav = alien.load('Navigation.dll')
+-- local nav = alien.load('Navigation.dll')
+
+local nav = Nav.Create()
 
 -- local Init1 = nav1.Init
 -- Init1:types('void', 'int', 'int', 'pointer')
 -- local Search1 = nav1.Search
 -- Search1:types('int', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int')
 
-local Init = nav.Init
-Init:types('void', 'int', 'int', 'pointer', 'int', 'pointer', 'int')
-local Search = nav.Search
-Search:types('int', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int')
+local test = require('Debug.BattleMap')
+
+-- local Init = nav.Init
+-- Init:types('void', 'int', 'int', 'pointer', 'int', 'pointer', 'int')
+-- local Search = nav.Search
+-- Search:types('int', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int', 'int')
+-- local MultiSearch = nav.MultiSearch
+-- MultiSearch:types('int', 'pointer', 'int', 'int', 'pointer', 'int', 'int', 'int', 'int')
+-- local FlagSearch = nav.FlagSearch
+-- FlagSearch:types('int', 'pointer', 'int', 'int', 'short', 'int', 'int', 'int')
 
 local width = 42
 local height = 42
 local array = alien.array('int', width * height)
 local hs = alien.array('int', width * height * 3)
-local fs = alien.array('int', {math.random(0, width - 1), math.random(0, height - 1), 1})
+local fs = alien.array('int', {
+    math.random(0, width - 1), math.random(0, height - 1), 1,
+    math.random(0, width - 1), math.random(0, height - 1), 1,
+    math.random(0, width - 1), math.random(0, height - 1), 1,
+    math.random(0, width - 1), math.random(0, height - 1), 1,
+    math.random(0, width - 1), math.random(0, height - 1), 1,
+    math.random(0, width - 1), math.random(0, height - 1), 2,
+    math.random(0, width - 1), math.random(0, height - 1), 2,
+    math.random(0, width - 1), math.random(0, height - 1), 2,
+    math.random(0, width - 1), math.random(0, height - 1), 2,
+    math.random(0, width - 1), math.random(0, height - 1), 3,
+    math.random(0, width - 1), math.random(0, height - 1), 3,
+    math.random(0, width - 1), math.random(0, height - 1), 3,
+})
+
+local f = {}
+
+for i, v in fs:ipairs() do
+    f[i - 1] = v
+end
+
 local hl = 0
-local fl = 1
+local fl = 12
 local map = {
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,00,00,99,00,00,00,00, 
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,00,00,99,00,00,00,00, 
@@ -67,28 +98,58 @@ local map = {
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,99,00,00,00,00,00, 
    00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,99,00,00,00,00,99,00,00,00,00,00, 
 }
+
+test:ctor(width - 2)
+test:init(require('Debug.GameMap'))
+
+local h = {}
+
 for i, v in ipairs(map) do
     array[i] = math.max(math.random(0, 1000) - 500, 0) / 5
+    h[i - 1] = array[i]
     if array[i] > 0 then
         hs[hl * 3 + 1] = (i - 1) % width
         hs[hl * 3 + 2] = math.floor((i - 1) / width)
         hs[hl * 3 + 3] = array[i]
         hl = hl + 1
+        test:addBattler({bid = 50, data = {hp = array[i]}, info = {btype = 0}, vstate = {edge = 1, bgx = (i - 1) % width, bgy = math.ceil((i - 1) / width), gsize = 1}})
     end
 end
 
 -- Init1(width, height, array.buffer)
-Init(width, height, hs.buffer, hl, fs.buffer, fl)
+-- Init(width, height, hs.buffer, hl, fs.buffer, fl)
+nav:Init(width, height)
+
+nav:UpdateHeight(h)
+
+nav:UpdateFlag(f)
 
 local x = {}
 local y = {}
 
 local count = 0
+
+local ends = alien.array('int', 20)
+
+local s = 0
+
 while 1 do
     local sx = math.random(0, width - 1)
     local sy = math.random(0, height - 1)
+    local len = math.random(1, 10)
+    for i=1, len do
+        local ex = math.random(0, width - 1)
+        local ey = math.random(0, height - 1)
+        ends[i * 2 - 1] = ex
+        ends[i * 2] = ey
+    end
     local ex = math.random(0, width - 1)
     local ey = math.random(0, height - 1)
+
+local t = socket.gettime()
+    NavSys.AddCmd(NavSys.ENavCmd.Search, nav, sx, sy, ex, ey, 1, 1, -1)
+s = s + socket.gettime() - t
+
     -- if count <= 100 then
     --     table.insert(x, sx)
     --     table.insert(x, ex)
@@ -102,32 +163,78 @@ while 1 do
     -- local sy = 0
     -- local ex = width - 1
     -- local ey = height - 1
-    print(sx, sy, ex, ey)
-    -- local s = socket.gettime()
+    -- print(sx, sy, ex, ey)
     -- local len = Search1(array.buffer, sx, sy, ex, ey, 1, 1)
-    -- -- local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
-    -- -- print(socket.gettime() - s)
+    -- local t = socket.gettime()
+    -- local len = MultiSearch(array.buffer, sx, sy, ends.buffer, len, 1, 1, -1)
+    -- local len = Search(array.buffer, sx, sy, ex, ey, 1, 1, -1)
+    -- local len = FlagSearch(array.buffer, sx, sy, math.random(1, 3), 1, 1, -1)
+    -- local path = nav:Search(sx, sy, ex, ey, 1, 1)
+    -- s = s + socket.gettime() - t
+    -- if sx == ex and sy == ey then
+    --     print('is in end')
+    -- elseif type(path) == 'number' then
+    --     print('error code = ' .. path)
+    -- else
+    --     local t = {}
+    --     for i, v in ipairs(path) do
+    --         t[i] = v.x .. '-' .. v.y
+    --     end
+    --     print(table.concat(t, ","))
+    -- end
+    -- print(socket.gettime() - s)
+    -- local t = {}
+    -- local oindex, index = array[1], array[1]
+    -- local dir
+    -- local i = 1
+    -- while i <= len do
+    --     oindex = index
+    --     index = array[i]
+    --     local d = index - oindex
+    --     if dir ~= d then
+    --         if dir ~= 0 then
+    --             table.insert(t, {array[i] % width, math.ceil(array[i] / width)})
+    --         end
+    --         dir = d
+    --     end
+    --     i = i + 1
+    -- end
+    -- for i, v in ipairs(t) do
+    --     t[i] = test:getAstarKey(v[1], v[2])
+    -- end
+    -- for i=1,len do
+    --     t[i] = array[i]
+    -- end
+    -- print(table.concat(t, ","))
+    -- local path2 = test:searchPathUsingAstarSample(sx + 0.5, sy + 0.5, ex + 0.5, ey + 0.5)
+    -- for i, v in ipairs(path2) do
+    --     path2[i] = test:getAstarKey(v[1], v[2])
+    -- end
+    -- print(table.concat(path2, ','))
+    -- local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
     -- local t = {}
     -- for i=1, len do
     --     table.insert(t, array[i])
     -- end
     -- print(table.concat(t, ","))
-    local len = Search(array.buffer, sx, sy, ex, ey, 1, 1)
-    local t = {}
-    for i=1, len do
-        table.insert(t, array[i])
-    end
-    print(table.concat(t, ","))
 
     count = count + 1
     -- Sleep(1)
     -- if count ~= 0 and count % 1000 == 0 then
     --     Sleep(3)
     -- end
+    -- print(count)
     if count >= 10000 then
+        -- print(s)
         break
     end
 end
+
+local t = socket.gettime()
+NavSys.Tick()
+s = s + socket.gettime() - t
+
+print(s)
 
 if true then
     return

@@ -35,4 +35,6 @@ local function UnBind(call, t, k)
     end
 end
 
-return Bind, UnBind
+return function()
+    return Bind, UnBind
+end

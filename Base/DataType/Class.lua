@@ -78,4 +78,6 @@ local function Class(className, ...)
     return class
 end
 
-return Class
+return function()
+    return Class
+end

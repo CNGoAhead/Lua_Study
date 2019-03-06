@@ -133,21 +133,23 @@ local ends = alien.array('int', 20)
 
 local s = 0
 
+local ps = {}
+
 while 1 do
     local sx = math.random(0, width - 1)
     local sy = math.random(0, height - 1)
-    local len = math.random(1, 10)
-    for i=1, len do
-        local ex = math.random(0, width - 1)
-        local ey = math.random(0, height - 1)
-        ends[i * 2 - 1] = ex
-        ends[i * 2] = ey
-    end
+    -- local len = math.random(1, 10)
+    -- for i=1, len do
+    --     local ex = math.random(0, width - 1)
+    --     local ey = math.random(0, height - 1)
+    --     ends[i * 2 - 1] = ex
+    --     ends[i * 2] = ey
+    -- end
     local ex = math.random(0, width - 1)
     local ey = math.random(0, height - 1)
 
 local t = socket.gettime()
-    NavSys.AddCmd(NavSys.ENavCmd.Search, nav, sx, sy, ex, ey, 1, 1, -1)
+    table.insert(ps, NavSys.AddCmd(NavSys.ENavCmd.Search, nav, sx, sy, ex, ey, 1, 1, -1))
 s = s + socket.gettime() - t
 
     -- if count <= 100 then
@@ -233,6 +235,19 @@ end
 local t = socket.gettime()
 NavSys.Tick()
 s = s + socket.gettime() - t
+
+for _, v in ipairs(ps) do
+    local path = NavSys.GetPath(v)
+    if type(path) == 'number' then
+        print('error code = ' .. path)
+    else
+        local t = {}
+        for i, v in ipairs(path) do
+            t[i] = v.x .. '-' .. v.y
+        end
+        print(table.concat(t, ","))
+    end
+end
 
 print(s)
 

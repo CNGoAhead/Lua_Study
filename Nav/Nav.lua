@@ -433,8 +433,7 @@ function NavSys.AddCmd(ecmd, ...)
         NavSys.__search_cmd__[CmdFunc[ecmd]] = NavSys.__search_cmd__[CmdFunc[ecmd]] or {}
         local key = MergeKey[ecmd](cmd)
         local ocmd = NavSys.__search_cmd__[CmdFunc[ecmd]][key]
-        if ocmd then
-            MergeCmd[ecmd](ocmd, cmd)
+        if ocmd and MergeCmd[ecmd](ocmd, cmd) then
             return ocmd.resultID
         end
         NavSys.__search_cmd__[CmdFunc[ecmd]][key] = cmd
@@ -446,8 +445,7 @@ function NavSys.AddCmd(ecmd, ...)
         NavSys.__height_cmd__[CmdFunc[ecmd]] = NavSys.__height_cmd__[CmdFunc[ecmd]] or {}
         local key = MergeKey[ecmd](cmd)
         local ocmd = NavSys.__height_cmd__[CmdFunc[ecmd]][key]
-        if ocmd then
-            MergeCmd[ecmd](ocmd, cmd)
+        if ocmd and MergeCmd[ecmd](ocmd, cmd) then
             return
         end
         NavSys.__height_cmd__[CmdFunc[ecmd]][key] = cmd
@@ -456,8 +454,7 @@ function NavSys.AddCmd(ecmd, ...)
         local cmd = {...}
         local key = MergeKey[ecmd](cmd)
         local ocmd = NavSys.__flag_cmd__[CmdFunc[ecmd]][key]
-        if ocmd then
-            MergeCmd[ecmd](ocmd, cmd)
+        if ocmd and MergeCmd[ecmd](ocmd, cmd) then
             return
         end
         NavSys.__flag_cmd__[CmdFunc[ecmd]][key] = cmd

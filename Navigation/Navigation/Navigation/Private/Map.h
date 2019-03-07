@@ -20,13 +20,13 @@ public:
 
 	std::string ToString(const std::vector<int> & path) const;
 
-	virtual Map * Init(int w, int h, std::unordered_map<int, int> height = std::unordered_map<int, int>(), std::unordered_map<int, short> flag = std::unordered_map<int, short>());
+	virtual Map * Init(int w, int h, std::unordered_map<int, int> height = std::unordered_map<int, int>(), std::unordered_map<int, unsigned short> flag = std::unordered_map<int, unsigned short>());
 	virtual Map * UpdateHeight(const std::unordered_map<int, int> & difh);
-	virtual Map * UpdateFlag(const std::unordered_map<int, short> & difg);
+	virtual Map * UpdateFlag(const std::unordered_map<int, unsigned short> & difg);
 	virtual Map * AddHeight(const std::unordered_map<int, int> & difh);
-	virtual Map * AddFlag(const std::unordered_map<int, short> & difg);
+	virtual Map * AddFlag(const std::unordered_map<int, unsigned short> & difg);
 	virtual Map * SubHeight(const std::unordered_map<int, int> & difh);
-	virtual Map * SubFlag(const std::unordered_map<int, short> & difg);
+	virtual Map * SubFlag(const std::unordered_map<int, unsigned short> & difg);
 	virtual Map * AnalysisMap();
 	virtual std::shared_ptr<G> GetGround(int index);
 	virtual int GetWidth() const;
@@ -70,7 +70,7 @@ std::string Map<G>::ToString(const std::vector<int> & path) const
 }
 
 template<typename G>
-inline Map<G> * Map<G>::SubFlag(const std::unordered_map<int, short> & difg)
+inline Map<G> * Map<G>::SubFlag(const std::unordered_map<int, unsigned short> & difg)
 {
 	for (auto p : difg)
 		_grounds[p.first]->SubFlag(p.second);
@@ -78,7 +78,7 @@ inline Map<G> * Map<G>::SubFlag(const std::unordered_map<int, short> & difg)
 }
 
 template<typename G>
-inline Map<G> * Map<G>::AddFlag(const std::unordered_map<int, short> & difg)
+inline Map<G> * Map<G>::AddFlag(const std::unordered_map<int, unsigned short> & difg)
 {
 	for (auto p : difg)
 		_grounds[p.first]->AddFlag(p.second);
@@ -102,10 +102,10 @@ inline Map<G> * Map<G>::SubHeight(const std::unordered_map<int, int> & difh)
 }
 
 template<typename G>
-inline Map<G> * Map<G>::UpdateFlag(const std::unordered_map<int, short> & difg)
+inline Map<G> * Map<G>::UpdateFlag(const std::unordered_map<int, unsigned short> & difg)
 {
 	for (auto p : difg)
-		_grounds[p.first]->SetFlag(p.second);
+		_grounds[p.first]->SetFlag(p.second); 
 	return this;
 }
 
@@ -124,7 +124,7 @@ inline int Map<G>::GetIndex(int w, int x, int y)
 }
 
 template<typename G>
-inline Map<G> * Map<G>::Init(int w, int h, std::unordered_map<int, int> height, std::unordered_map<int, short> flag)
+inline Map<G> * Map<G>::Init(int w, int h, std::unordered_map<int, int> height, std::unordered_map<int, unsigned short> flag)
 {
 	_w = w;
 	_h = h;

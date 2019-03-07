@@ -44,7 +44,7 @@ public:
 
 	virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
 
-	virtual std::vector<int> FlagSearch(int sx, int sy, short flag, int dps, int speed, int duration = 0) = 0;
+	virtual std::vector<int> FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration = 0) = 0;
 
 	virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = 0) = 0;
 

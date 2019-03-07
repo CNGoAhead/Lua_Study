@@ -58,12 +58,12 @@ private:
 
 	struct NavigationCache_Flag : public INavigationCache
 	{
-		NavigationCache_Flag(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+		NavigationCache_Flag(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
 			: INavigationCache(INavigationCache::ENavType::Flag), sindex(sindex), flag(flag), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
 		{
 		}
 		int sindex;
-		short flag;
+		unsigned short flag;
 		int dps;
 		int speed;
 		std::priority_queue<ptrD, std::vector<ptrD>, Compare> open;
@@ -91,7 +91,7 @@ public:
 
 	inline virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = -1);
 
-	inline virtual std::vector<int> FlagSearch(int sx, int sy, short flag, int dps, int speed, int duration = -1);
+	inline virtual std::vector<int> FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration = -1);
 
 	inline virtual std::vector<int> ResumeSearch(int searchId, int duration = -1);
 
@@ -101,7 +101,7 @@ private:
 
 	inline virtual ptrD MultiSearch(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
 
-	inline virtual ptrD FlagSearch(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
+	inline virtual ptrD FlagSearch(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
 
 	inline virtual ptrD BFS(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
 
@@ -121,7 +121,7 @@ private:
 
 	inline virtual AStarNavigation<M, D> * AddOpen(std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, ptrD & l, ptrD & o, std::unordered_map<int, int> & minMap);
 
-	inline virtual ptrD BFS(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+	inline virtual ptrD BFS(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
 
 	inline virtual std::vector<ptrD> GetOpensWithNear(int sindex, int dps, int speed, std::unordered_set<int> & close);
 
@@ -133,7 +133,7 @@ private:
 
 	inline virtual std::vector<int> SaveCache(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
 
-	inline virtual std::vector<int> SaveCache(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+	inline virtual std::vector<int> SaveCache(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
 
 private:
 
@@ -142,7 +142,7 @@ private:
 };
 
 template<typename M, typename D>
-std::shared_ptr<D> AStarNavigation<M, D>::FlagSearch(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime)
+std::shared_ptr<D> AStarNavigation<M, D>::FlagSearch(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime)
 {
 	auto cur = open.top();
 	sindex = cur->GetIndex();
@@ -172,7 +172,7 @@ std::shared_ptr<D> AStarNavigation<M, D>::MultiSearch(int sindex, std::unordered
 }
 
 template<typename M, typename D>
-std::vector<int> AStarNavigation<M, D>::SaveCache(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+std::vector<int> AStarNavigation<M, D>::SaveCache(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
 {
 	_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Flag(sindex, flag, dps, speed, open, close, minMap)));
 	return { (int)_cache.size() - 1 };
@@ -304,7 +304,7 @@ std::vector<std::shared_ptr<D>> AStarNavigation<M, D>::GetOpensWithNear(int sind
 }
 
 template<typename M, typename D>
-std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
 {
 	auto otop = open.top();
 	auto v = GetOpensWithNear(sindex, dps, speed, close);
@@ -503,7 +503,7 @@ std::vector<int> AStarNavigation<M, D>::Search(int sx, int sy, int ex, int ey, i
 }
 
 template<typename M, typename D>
-std::vector<int> AStarNavigation<M, D>::FlagSearch(int sx, int sy, short flag, int dps, int speed, int duration)
+std::vector<int> AStarNavigation<M, D>::FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration)
 {
 	int sindex = Navigation<M, D>::GetMap()->GetIndex(sx, sy);
 	std::priority_queue<ptrD, std::vector<ptrD>, Compare> open;

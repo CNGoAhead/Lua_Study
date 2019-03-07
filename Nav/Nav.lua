@@ -1,8 +1,10 @@
 local Nav = {}
 
+local bit = require('bit')
+
 local alien = require('alien')
 
-local NavDll = alien.load('Nav/Nav.Dll')
+local NavDll = alien.load('App/Nav/Nav.Dll')
 
 -- Nav * Create()
 local Create = NavDll.Create
@@ -60,9 +62,9 @@ Search:types('int', 'pointer', 'pointer', 'int', 'int', 'int', 'int', 'int', 'in
 
 -- @path out 同上
 -- @return 同上
--- int FlagSearch(Nav * nav, int * path, int sx, int sy, short flag, int dps, int speed, int duration)
+-- int FlagSearch(Nav * nav, int * path, int sx, int sy, unsigned short flag, int dps, int speed, int duration)
 local FlagSearch = NavDll.FlagSearch
-FlagSearch:types('int', 'pointer', 'pointer', 'int', 'int', 'short', 'int', 'int', 'int')
+FlagSearch:types('int', 'pointer', 'pointer', 'int', 'int', 'ushort', 'int', 'int', 'int')
 
 -- @path out 同上
 -- @ends [x, y, x, y, ...]
@@ -159,7 +161,7 @@ function Nav.UpdateFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('int', array)
+    array = alien.array('ushort', array)
     UpdateFlag(nav.pointer, array.buffer, len)
 end
 
@@ -173,7 +175,7 @@ function Nav.AddFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('int', array)
+    array = alien.array('ushort', array)
     AddFlag(nav.pointer, array.buffer, len)
 end
 
@@ -187,7 +189,7 @@ function Nav.SubFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('int', array)
+    array = alien.array('ushort', array)
     SubFlag(nav.pointer, array.buffer, len)
 end
 
@@ -195,7 +197,8 @@ local function ReturnPath(nav, path, len)
     if len > 1 then
         local ret = {}
         for i = 1, len do
-            ret[i] = {x = nav:GetX(path[i]), y = nav:GetY(path[i])}
+            -- ret[i] = {x = nav:GetX(path[i]), y = nav:GetY(path[i])}
+            ret[i] = path[i]
         end
         return ret      --路径[{x,y}, ...]
     elseif len == 1 then
@@ -238,8 +241,6 @@ function Nav.ResumeSearch(nav, id, duration)
     local len = ResumeSearch(nav.pointer, path.buffer, id, duration)
     return ReturnPath(nav, path, len)
 end
-
-local Bit = require('bit')
 
 local NavSys = {
     __height_cmd__ = {},
@@ -410,7 +411,7 @@ local MergeCmd = {
     [NavSys.ENavCmd.AddFlag] = function(a, b)
         if Equal(a, b, {1}) then
             for k, v in pairs(b[2]) do
-                a[2][k] = Bit.bor((a[2][k] or 0), v)
+                a[2][k] = bit.bor((a[2][k] or 0), v)
             end
             return true
         end
@@ -419,7 +420,7 @@ local MergeCmd = {
     [NavSys.ENavCmd.SubFlag] = function(a, b)
         if Equal(a, b, {1}) then
             for k, v in pairs(b[2]) do
-                a[2][k] = Bit.band((a[2][k] or 0), Bit.bnot(v))
+                a[2][k] = bit.band((a[2][k] or 0), bit.bnot(v))
             end
             return true
         end

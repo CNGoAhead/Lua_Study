@@ -408,7 +408,7 @@ local MergeCmd = {
         return false
     end,
     [NavSys.ENavCmd.AddFlag] = function(a, b)
-    if Equal(a, b, {1}) then
+        if Equal(a, b, {1}) then
             for k, v in pairs(b[2]) do
                 a[2][k] = Bit.bor((a[2][k] or 0), v)
             end
@@ -464,6 +464,13 @@ end
 
 function NavSys.GetPath(resultId)
     return NavSys.__result_cache__[resultId]
+end
+
+function NavSys.Clear()
+    NavSys.__flag_cmd__ = {}
+    NavSys.__height_cmd__ = {}
+    NavSys.__search_cmd__ = {}
+    NavSys.__result_cache__ = {}
 end
 
 function NavSys.Tick()

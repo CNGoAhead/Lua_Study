@@ -48,8 +48,8 @@ local fs = alien.array('int', {
 
 local f = {}
 
-for i, v in fs:ipairs() do
-    f[i - 1] = v
+for i=1,10 do
+    f[nav:GetIndex(math.random(0, width - 1), math.random(0, height - 1))] = math.random(1, 3)
 end
 
 local hl = 0
@@ -148,9 +148,9 @@ while 1 do
     local ex = math.random(0, width - 1)
     local ey = math.random(0, height - 1)
 
-local t = socket.gettime()
-    table.insert(ps, NavSys.AddCmd(NavSys.ENavCmd.Search, nav, sx, sy, ex, ey, 1, 1, -1))
-s = s + socket.gettime() - t
+-- local t = socket.gettime()
+--     table.insert(ps, NavSys.AddCmd(NavSys.ENavCmd.Search, nav, sx, sy, ex, ey, 1, 1, -1))
+-- s = s + socket.gettime() - t
 
     -- if count <= 100 then
     --     table.insert(x, sx)
@@ -208,7 +208,9 @@ s = s + socket.gettime() - t
     --     t[i] = array[i]
     -- end
     -- print(table.concat(t, ","))
-    -- local path2 = test:searchPathUsingAstarSample(sx + 0.5, sy + 0.5, ex + 0.5, ey + 0.5)
+    local t = socket.gettime()
+    local path2 = test:searchPathUsingAstarSample(sx, sy, ex, ey)
+    s = s + socket.gettime() - t
     -- for i, v in ipairs(path2) do
     --     path2[i] = test:getAstarKey(v[1], v[2])
     -- end
@@ -232,22 +234,22 @@ s = s + socket.gettime() - t
     end
 end
 
-local t = socket.gettime()
-NavSys.Tick()
-s = s + socket.gettime() - t
+-- local t = socket.gettime()
+-- NavSys.Tick()
+-- s = s + socket.gettime() - t
 
-for _, v in ipairs(ps) do
-    local path = NavSys.GetPath(v)
-    if type(path) == 'number' then
-        print('error code = ' .. path)
-    else
-        local t = {}
-        for i, v in ipairs(path) do
-            t[i] = v.x .. '-' .. v.y
-        end
-        print(table.concat(t, ","))
-    end
-end
+-- for _, v in ipairs(ps) do
+--     local path = NavSys.GetPath(v)
+--     if type(path) == 'number' then
+--         print('error code = ' .. path)
+--     else
+--         local t = {}
+--         for i, v in ipairs(path) do
+--             t[i] = v.x .. '-' .. v.y
+--         end
+--         print(table.concat(t, ","))
+--     end
+-- end
 
 print(s)
 

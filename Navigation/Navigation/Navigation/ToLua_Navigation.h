@@ -3,19 +3,21 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "tolua++.h"
+#include "../lua/tolua/tolua++.h"
 #ifdef __cplusplus
 }
 #endif
 
-#include "scripting/lua-bindings/manual/tolua_fix.h"
-#include "scripting/lua-bindings/manual/LuaBasicConversions.h"
+#include <iostream>
 
-#include "Navigation/Private/AStarNavigation.h"
-#include "Navigation/Private/Distance.h"
-#include "Navigation/Private/Map.h"
-#include "Navigation/Private/Ground.h"
+#include "../lua/tolua/tolua_fix.h"
 
+#include "./Private/AStarNavigation.h"
+#include "./Private/Distance.h"
+#include "./Private/Map.h"
+#include "./Private/Ground.h"
+
+int costTime = 0;
 
 namespace NS_Navigation {
 
@@ -130,7 +132,7 @@ namespace NS_Navigation {
 		int w = 0;
 		int h = 0;
 		luaval_to_int32(L, 2, &w);
-		luaval_to_int32(L, 2, &h);
+		luaval_to_int32(L, 3, &h);
 		Init(nav, w, h);
 		return 0;
 	}
@@ -263,22 +265,33 @@ namespace NS_Navigation {
 	}
 
 	void Lua_Register_Navigation(lua_State * L) {
-
-		tolua_beginmodule(L, "Navigation");
-		tolua_function(L, "Create", Lua_Create);
-		tolua_function(L, "Delete", Lua_Delete);
-		tolua_function(L, "Init", Lua_Init);
-		tolua_function(L, "UpdateHeight", Lua_UpdateHeight);
-		tolua_function(L, "AddHeight", Lua_AddHeight);
-		tolua_function(L, "SubHeight", Lua_SubHeight);
-		tolua_function(L, "UpdateFlag", Lua_UpdateFlag);
-		tolua_function(L, "AddFlag", Lua_AddFlag);
-		tolua_function(L, "SubFlag", Lua_SubFlag);
-		tolua_function(L, "Search", Lua_Search);
-		tolua_function(L, "FlagSearch", Lua_FlagSearch);
-		tolua_function(L, "MultiSearch", Lua_MultiSearch);
-		tolua_function(L, "ResumeSearch", Lua_ResumeSearch);
-		tolua_endmodule(L);
+		lua_getglobal(L, "_G");
+		if (lua_istable(L, -1))
+		{
+			tolua_open(L);
+			tolua_module(L, "Navigation", 0);
+			tolua_usertype(L, "Navigation");
+			tolua_cclass(L, "Navigation", "Navigation", "", nullptr);
+			tolua_beginmodule(L, "Navigation");
+			tolua_function(L, "Create", Lua_Create);
+			tolua_function(L, "Delete", Lua_Delete);
+			tolua_function(L, "Init", Lua_Init);
+			tolua_function(L, "UpdateHeight", Lua_UpdateHeight);
+			tolua_function(L, "AddHeight", Lua_AddHeight);
+			tolua_function(L, "SubHeight", Lua_SubHeight);
+			tolua_function(L, "UpdateFlag", Lua_UpdateFlag);
+			tolua_function(L, "AddFlag", Lua_AddFlag);
+			tolua_function(L, "SubFlag", Lua_SubFlag);
+			tolua_function(L, "Search", Lua_Search);
+			tolua_function(L, "FlagSearch", Lua_FlagSearch);
+			tolua_function(L, "MultiSearch", Lua_MultiSearch);
+			tolua_function(L, "ResumeSearch", Lua_ResumeSearch);
+			tolua_endmodule(L);
+			std::string typeName = typeid(Nav).name();
+			g_luaType[typeName] = "Navigation";
+			g_typeCast["Navigation"] = "Navigation";
+		}
+		lua_pop(L, 1);
 
 		return;
 	}

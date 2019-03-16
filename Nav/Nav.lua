@@ -1,10 +1,8 @@
 local Nav = {}
 
-local bit = require('bit')
-
 local alien = require('alien')
 
-local NavDll = alien.load('App/Nav/Nav.Dll')
+local NavDll = alien.load('Nav/NavLib.Dll')
 
 -- Nav * Create()
 local Create = NavDll.Create
@@ -161,7 +159,7 @@ function Nav.UpdateFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('ushort', array)
+    array = alien.array('int', array)
     UpdateFlag(nav.pointer, array.buffer, len)
 end
 
@@ -175,7 +173,7 @@ function Nav.AddFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('ushort', array)
+    array = alien.array('int', array)
     AddFlag(nav.pointer, array.buffer, len)
 end
 
@@ -189,7 +187,7 @@ function Nav.SubFlag(nav, flags)
         table.insert(array, v)
         len = len + 1
     end
-    array = alien.array('ushort', array)
+    array = alien.array('int', array)
     SubFlag(nav.pointer, array.buffer, len)
 end
 

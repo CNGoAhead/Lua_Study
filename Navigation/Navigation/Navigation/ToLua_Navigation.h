@@ -17,7 +17,10 @@ extern "C" {
 #include "./Private/Map.h"
 #include "./Private/Ground.h"
 
+//#include "./TimeCost.h"
+
 int costTime = 0;
+// extern TimeCost G_T = TimeCost();
 
 namespace NS_Navigation {
 
@@ -123,7 +126,7 @@ namespace NS_Navigation {
 	}
 
 	int Lua_Delete(lua_State * L) {
-		delete tolua_tousertype(L, 1, 0);
+		Delete((Nav*)tolua_tousertype(L, 1, 0));
 		return 0;
 	}
 

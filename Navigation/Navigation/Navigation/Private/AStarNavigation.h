@@ -2,6 +2,8 @@
 
 #include "Navigation.h"
 
+#include "../TimeCost.h"
+
 namespace NS_Navigation {
 
 	template<typename M, typename D>
@@ -29,11 +31,10 @@ namespace NS_Navigation {
 		class NavigationCache_Normal : public INavigationCache
 		{
 		public:
-			NavigationCache_Normal(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
-				: INavigationCache(INavigationCache::ENavType::Normal), sindex(sindex), eindex(eindex), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
+			NavigationCache_Normal(int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+				: INavigationCache(INavigationCache::ENavType::Normal), eindex(eindex), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
 			{
 			}
-			int sindex;
 			int eindex;
 			int dps;
 			int speed;
@@ -45,11 +46,10 @@ namespace NS_Navigation {
 		class NavigationCache_Multi : public INavigationCache
 		{
 		public:
-			NavigationCache_Multi(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
-				: INavigationCache(INavigationCache::ENavType::Multi), sindex(sindex), eindexs(eindexs), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
+			NavigationCache_Multi(std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+				: INavigationCache(INavigationCache::ENavType::Multi), eindexs(eindexs), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
 			{
 			}
-			int sindex;
 			std::unordered_set<int> eindexs;
 			int dps;
 			int speed;
@@ -60,11 +60,10 @@ namespace NS_Navigation {
 
 		struct NavigationCache_Flag : public INavigationCache
 		{
-			NavigationCache_Flag(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
-				: INavigationCache(INavigationCache::ENavType::Flag), sindex(sindex), flag(flag), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
+			NavigationCache_Flag(unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+				: INavigationCache(INavigationCache::ENavType::Flag), flag(flag), dps(dps), speed(speed), open(open), close(close), minMap(minMap)
 			{
 			}
-			int sindex;
 			unsigned short flag;
 			int dps;
 			int speed;
@@ -83,7 +82,7 @@ namespace NS_Navigation {
 		~AStarNavigation() {
 		};
 
-		inline virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = -1);
+		inline virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = -1) override;
 
 #ifdef DEBUG
 
@@ -91,31 +90,27 @@ namespace NS_Navigation {
 
 #endif // DEBUG
 
-		inline virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = -1);
+		inline virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = -1) override;
 
-		inline virtual std::vector<int> FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration = -1);
+		inline virtual std::vector<int> FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration = -1) override;
 
-		inline virtual std::vector<int> ResumeSearch(int searchId, int duration = -1);
+		inline virtual std::vector<int> ResumeSearch(int searchId, int duration = -1) override;
 
 	private:
 
-		inline virtual ptrD Search(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
+		inline virtual ptrD Search(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime);
 
-		inline virtual ptrD MultiSearch(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
+		inline virtual ptrD MultiSearch(std::unordered_set<int> & eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime);
 
-		inline virtual ptrD FlagSearch(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime);
+		inline virtual ptrD FlagSearch(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime);
 
-		inline virtual ptrD BFS(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
-
-		inline virtual ptrD LFS(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual ptrD BFS(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
 		inline virtual std::vector<ptrD> GetOpensWithNear(int sindex, int eindex, int dps, int speed, std::unordered_set<int> & close);
 
 		inline virtual std::vector<ptrD> GetOpensWithDir(int sindex, int eindex, int dps, int speed, std::unordered_set<int> & close);
 
-		inline virtual ptrD BFS(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
-
-		inline virtual ptrD LFS(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual ptrD BFS(std::unordered_set<int> eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
 		inline virtual std::vector<ptrD> GetOpensWithNear(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::unordered_set<int> & close);
 
@@ -123,7 +118,7 @@ namespace NS_Navigation {
 
 		inline virtual AStarNavigation<M, D> * AddOpen(std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, ptrD & l, ptrD & o, std::unordered_map<int, int> & minMap);
 
-		inline virtual ptrD BFS(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual ptrD BFS(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
 		inline virtual std::vector<ptrD> GetOpensWithNear(int sindex, int dps, int speed, std::unordered_set<int> & close);
 
@@ -131,11 +126,11 @@ namespace NS_Navigation {
 
 		inline virtual std::vector<int> GetPath(ptrD cur);
 
-		inline virtual std::vector<int> SaveCache(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual std::vector<int> SaveCache(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
-		inline virtual std::vector<int> SaveCache(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual std::vector<int> SaveCache(std::unordered_set<int> & eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
-		inline virtual std::vector<int> SaveCache(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap);
+		inline virtual std::vector<int> SaveCache(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed);
 
 	private:
 
@@ -144,13 +139,13 @@ namespace NS_Navigation {
 	};
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::FlagSearch(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime)
+	std::shared_ptr<D> AStarNavigation<M, D>::FlagSearch(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime)
 	{
 		auto cur = open.top();
-		sindex = cur->GetIndex();
+		int sindex = cur->GetIndex();
 		while (!Navigation<M, D>::GetMap()->GetGround(sindex)->HasFlag(flag) && (etime <= 0 || ::GetTickCount() > etime))
 		{
-			cur = BFS(sindex, flag, dps, speed, open, close, minMap);
+			cur = BFS(flag, open, close, minMap, dps, speed);
 			if (!cur)
 				break;
 			sindex = cur->GetIndex();
@@ -159,13 +154,13 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::MultiSearch(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime)
+	std::shared_ptr<D> AStarNavigation<M, D>::MultiSearch(std::unordered_set<int> & eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime)
 	{
 		auto cur = open.top();
-		sindex = cur->GetIndex();
+		int sindex = cur->GetIndex();
 		while (eindexs.find(sindex) == eindexs.end() && (etime <= 0 || ::GetTickCount() > etime))
 		{
-			cur = BFS(sindex, eindexs, dps, speed, open, close, minMap);
+			cur = BFS(eindexs, open, close, minMap, dps, speed);
 			if (!cur)
 				break;
 			sindex = cur->GetIndex();
@@ -174,23 +169,23 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	std::vector<int> AStarNavigation<M, D>::SaveCache(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::vector<int> AStarNavigation<M, D>::SaveCache(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
-		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Flag(sindex, flag, dps, speed, open, close, minMap)));
+		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Flag(flag, dps, speed, open, close, minMap)));
 		return { -int(_cache.size()) };
 	}
 
 	template<typename M, typename D>
-	std::vector<int> AStarNavigation<M, D>::SaveCache(int sindex, std::unordered_set<int> & eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::vector<int> AStarNavigation<M, D>::SaveCache(std::unordered_set<int> & eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
-		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Multi(sindex, eindexs, dps, speed, open, close, minMap)));
+		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Multi(eindexs, dps, speed, open, close, minMap)));
 		return { -int(_cache.size()) };
 	}
 
 	template<typename M, typename D>
-	std::vector<int> AStarNavigation<M, D>::SaveCache(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::vector<int> AStarNavigation<M, D>::SaveCache(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
-		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Normal(sindex, eindex, dps, speed, open, close, minMap)));
+		_cache.push_back(std::shared_ptr<INavigationCache>(new NavigationCache_Normal(eindex, dps, speed, open, close, minMap)));
 		return { -int(_cache.size()) };
 	}
 
@@ -208,28 +203,18 @@ namespace NS_Navigation {
 		std::reverse(path.begin(), path.end());
 
 		Navigation<M, D>::ClearMoveGroundHeight(path);
-
+		
 		return path;
 	}
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::Search(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int etime)
+	std::shared_ptr<D> AStarNavigation<M, D>::Search(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed, int etime)
 	{
 		auto cur = open.top();
-		//auto ocur = cur;
-		sindex = cur->GetIndex();
+		int sindex = cur->GetIndex();
 		while (sindex != eindex && (etime <= 0 || ::GetTickCount() > etime))
 		{
-			//if (ocur != cur && *cur == * ocur)
-			//{
-			//	ocur = cur;
-			//	cur = LFS(sindex, eindex, dps, speed, open, close, minMap);
-			//}
-			//else
-			//{
-			//	ocur = cur;
-			cur = BFS(sindex, eindex, dps, speed, open, close, minMap);
-			//}
+			cur = BFS(eindex, open, close, minMap, dps, speed);
 			if (!cur)
 				break;
 			sindex = cur->GetIndex();
@@ -259,7 +244,7 @@ namespace NS_Navigation {
 		sindex = cur->GetIndex();
 		while (sindex != eindex && (etime <= 0 || ::GetTickCount() > etime))
 		{
-			cur = BFS(sindex, eindex, dps, speed, open, close, minMap);
+			cur = BFS(eindex, open, close, minMap, dps, speed);
 			if (!cur)
 				break;
 			sindex = cur->GetIndex();
@@ -298,17 +283,19 @@ namespace NS_Navigation {
 			auto g = map->GetGround(index);
 			if (g && g->GetHeight() >= 0)
 			{
-				ret.push_back(ptrD(new D()));
-				(*ret.rbegin())->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), 0);
+				auto d = new D();
+				ret.push_back(ptrD(d));
+				d->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), 0);
 			}
 		}
 		return ret;
 	}
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, unsigned short flag, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::shared_ptr<D> AStarNavigation<M, D>::BFS(unsigned short flag, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
 		auto otop = open.top();
+		int sindex = otop->GetIndex();
 		auto v = GetOpensWithNear(sindex, dps, speed, close);
 		open.pop();
 		for (auto c : v)
@@ -372,8 +359,9 @@ namespace NS_Navigation {
 			auto g = Navigation<M, D>::GetMap()->GetGround(index);
 			if (g && g->GetHeight() >= 0)
 			{
-				ret.push_back(ptrD(new D()));
-				(*ret.rbegin())->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), ExpectDistance(index, eindexs));
+				auto d = new D();
+				ret.push_back(ptrD(d));
+				d->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), ExpectDistance(index, eindexs));
 			}
 		}
 		return ret;
@@ -395,35 +383,19 @@ namespace NS_Navigation {
 			auto g = map->GetGround(index);
 			if (g && g->GetHeight() >= 0)
 			{
-				ret.push_back(ptrD(new D()));
-				(*ret.rbegin())->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), ExpectDistance(index, eindexs));
+				auto d = new D();
+				ret.push_back(ptrD(d));
+				d->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), ExpectDistance(index, eindexs));
 			}
 		}
 		return ret;
 	}
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::LFS(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::shared_ptr<D> AStarNavigation<M, D>::BFS(std::unordered_set<int> eindexs, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
 		auto otop = open.top();
-		auto v = GetOpensWithDir(sindex, eindexs, dps, speed, close);
-		for (auto c : v)
-		{
-			if (eindexs.find(c->GetIndex()) != eindexs.end())
-			{
-				c->SetLast(otop);
-				return c;
-			}
-			AddOpen(open, otop, c, minMap);
-			Navigation<M, D>::AddClose(close, sindex, c->GetIndex());
-		}
-		return open.top();
-	}
-
-	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, std::unordered_set<int> eindexs, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
-	{
-		auto otop = open.top();
+		int sindex = otop->GetIndex();
 		auto v = GetOpensWithNear(sindex, eindexs, dps, speed, close);
 		open.pop();
 		for (auto c : v)
@@ -471,8 +443,9 @@ namespace NS_Navigation {
 			auto g = Navigation<M, D>::GetMap()->GetGround(index);
 			if (g && g->GetHeight() >= 0)
 			{
-				ret.push_back(ptrD(new D()));
-				(*ret.rbegin())->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), Navigation<M, D>::ExpectDistance(index, eindex));
+				auto d = new D();
+				ret.push_back(ptrD(d));
+				d->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), Navigation<M, D>::ExpectDistance(index, eindex));
 			}
 		}
 		return ret;
@@ -494,14 +467,14 @@ namespace NS_Navigation {
 		if (duration > 0)
 			etime = ::GetTickCount() + duration;
 
-		auto cur = Search(sindex, eindex, dps, speed, open, close, minMap, etime);
+		auto cur = Search(eindex, open, close, minMap, dps, speed, etime);
 
 		if (!cur)
 			return {};
 		else if (cur->GetIndex() == eindex)
 			return GetPath(cur);
 		else
-			return SaveCache(sindex, eindex, dps, speed, open, close, minMap);
+			return SaveCache(eindex, open, close, minMap, dps, speed);
 	}
 
 	template<typename M, typename D>
@@ -519,14 +492,14 @@ namespace NS_Navigation {
 		if (duration > 0)
 			etime = ::GetTickCount() + duration;
 
-		auto cur = FlagSearch(sindex, flag, dps, speed, open, close, minMap, etime);
+		auto cur = FlagSearch(flag, open, close, minMap, dps, speed, etime);
 
 		if (!cur)
 			return {};
 		else if (Navigation<M, D>::GetMap()->GetGround(cur->GetIndex())->HasFlag(flag))
 			return GetPath(cur);
 		else
-			return SaveCache(sindex, flag, dps, speed, open, close, minMap);
+			return SaveCache(flag, open, close, minMap, dps, speed);
 	}
 
 	template<typename M, typename D>
@@ -547,14 +520,14 @@ namespace NS_Navigation {
 		if (duration > 0)
 			etime = ::GetTickCount() + duration;
 
-		auto cur = MultiSearch(sindex, eindexs, dps, speed, open, close, minMap, etime);
+		auto cur = MultiSearch(eindexs, open, close, minMap, dps, speed, etime);
 
 		if (!cur)
 			return {};
 		else if (eindexs.find(cur->GetIndex()) != eindexs.end())
 			return GetPath(cur);
 		else
-			return SaveCache(sindex, eindexs, dps, speed, open, close, minMap);
+			return SaveCache(eindexs, open, close, minMap, dps, speed);
 	}
 
 	template<typename M, typename D>
@@ -576,21 +549,21 @@ namespace NS_Navigation {
 			case INavigationCache::ENavType::Normal:
 				p1 = dynamic_cast<NavigationCache_Normal*>(save.get());
 				if (p1)
-					cur = Search(p1->sindex, p1->eindex, p1->dps, p1->speed, p1->open, p1->close, p1->minMap, etime);
+					cur = Search(p1->eindex, p1->open, p1->close, p1->minMap, p1->dps, p1->speed, etime);
 				if (cur && cur->GetIndex() == p1->eindex)
 					return GetPath(cur);
 				break;
 			case INavigationCache::ENavType::Multi:
 				p2 = dynamic_cast<NavigationCache_Multi*>(save.get());
 				if (p2)
-					cur = MultiSearch(p2->sindex, p2->eindexs, p2->dps, p2->speed, p2->open, p2->close, p2->minMap, etime);
+					cur = MultiSearch(p2->eindexs, p2->open, p2->close, p2->minMap, p2->dps, p2->speed, etime);
 				if (cur && p2->eindexs.find(cur->GetIndex()) != p2->eindexs.end())
 					return GetPath(cur);
 				break;
 			case INavigationCache::ENavType::Flag:
 				p3 = dynamic_cast<NavigationCache_Flag*>(save.get());
 				if (p3)
-					cur = FlagSearch(p3->sindex, p3->flag, p3->dps, p3->speed, p3->open, p3->close, p3->minMap, etime);
+					cur = FlagSearch(p3->flag, p3->open, p3->close, p3->minMap, p3->dps, p3->speed, etime);
 				if (cur && Navigation<M, D>::GetMap()->GetGround(cur->GetIndex())->HasFlag(p3->flag))
 					return GetPath(cur);
 				break;
@@ -605,9 +578,10 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::BFS(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
+	std::shared_ptr<D> AStarNavigation<M, D>::BFS(int eindex, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap, int dps, int speed)
 	{
 		auto otop = open.top();
+		int sindex = otop->GetIndex();
 		auto v = GetOpensWithNear(sindex, eindex, dps, speed, close);
 		open.pop();
 		for (auto c : v)
@@ -622,24 +596,6 @@ namespace NS_Navigation {
 		}
 		if (open.empty())
 			return nullptr;
-		return open.top();
-	}
-
-	template<typename M, typename D>
-	std::shared_ptr<D> AStarNavigation<M, D>::LFS(int sindex, int eindex, int dps, int speed, std::priority_queue<ptrD, std::vector<ptrD>, Compare> & open, std::unordered_set<int> & close, std::unordered_map<int, int> & minMap)
-	{
-		auto otop = open.top();
-		auto v = GetOpensWithDir(sindex, eindex, dps, speed, close);
-		for (auto c : v)
-		{
-			if (c->GetIndex() == eindex)
-			{
-				c->SetLast(otop);
-				return c;
-			}
-			AddOpen(open, otop, c, minMap);
-			Navigation<M, D>::AddClose(close, sindex, c->GetIndex());
-		}
 		return open.top();
 	}
 
@@ -659,8 +615,9 @@ namespace NS_Navigation {
 			auto g = map->GetGround(index);
 			if (g && g->GetHeight() >= 0)
 			{
-				ret.push_back(ptrD(new D()));
-				(*ret.rbegin())->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), Navigation<M, D>::ExpectDistance(index, eindex));
+				auto d = new D();
+				ret.push_back(ptrD(d));
+				d->Init(index, Navigation<M, D>::CalcuDistance(sindex, index, dps, speed), Navigation<M, D>::ExpectDistance(index, eindex));
 			}
 		}
 		return ret;

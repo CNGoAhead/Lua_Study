@@ -1,5 +1,6 @@
 #pragma once
 
+#include <windows.h>
 #include "..\Public\INavigation.h"
 
 namespace NS_Navigation {
@@ -28,6 +29,10 @@ namespace NS_Navigation {
 
 		virtual bool IsInClose(std::unordered_set<int> & close, int index1, int index2 = -1);
 
+		virtual int ExpectDistance(float x, float y, int index);
+
+		virtual int CalcuDistance(float x, float y, int index, int dps, int speed);
+
 		virtual int ExpectDistance(int index1, int index2);
 
 		virtual int CalcuDistance(int index1, int index2, int dps, int speed);
@@ -39,6 +44,22 @@ namespace NS_Navigation {
 		std::shared_ptr<M> _map;
 
 	};
+
+	template<typename M, typename D>
+	int NS_Navigation::Navigation<M, D>::CalcuDistance(float x, float y, int index, int dps, int speed)
+	{
+		int h = _map->GetGround(index)->GetHeight();
+		int dis = ExpectDistance(x, y, index);
+		return dis + h / dps * speed;
+	}
+
+	template<typename M, typename D>
+	int NS_Navigation::Navigation<M, D>::ExpectDistance(float x, float y, int index)
+	{
+		x = abs(x - _map->GetX(index));
+		y = abs(y - _map->GetY(index));
+		return int(min(x, y) * 14.0 + abs(x - y) * 10.0 + 0.5);
+	}
 
 	template<typename M, typename D>
 	std::shared_ptr<M> Navigation<M, D>::GetMap()

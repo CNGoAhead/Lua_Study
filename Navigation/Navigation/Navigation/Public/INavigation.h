@@ -38,17 +38,21 @@ namespace NS_Navigation {
 
 		virtual bool IsInClose(std::unordered_set<int>& close, int index1, int index2 = -1) = 0;
 
+		virtual int ExpectDistance(float x, float y, int index) = 0;
+
+		virtual int CalcuDistance(float x, float y, int index, int dps, int speed) = 0;
+
 		virtual int ExpectDistance(int index1, int index2) = 0;
 
 		virtual int CalcuDistance(int index1, int index2, int dps, int speed) = 0;
 
 		virtual INavigation * ClearMoveGroundHeight(std::vector<int> & path) = 0;
 
-		virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
+		virtual std::vector<int> Search(float sx, float sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
 
-		virtual std::vector<int> FlagSearch(int sx, int sy, unsigned short flag, int dps, int speed, int duration = 0) = 0;
+		virtual std::vector<int> FlagSearch(float sx, float sy, unsigned short flag, int dps, int speed, int duration = 0) = 0;
 
-		virtual std::vector<int> MultiSearch(int sx, int sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = 0) = 0;
+		virtual std::vector<int> MultiSearch(float sx, float sy, std::vector<std::pair<int, int>> & ends, int dps, int speed, int duration = 0) = 0;
 
 		virtual std::vector<int> ResumeSearch(int searchId, int etime) = 0;
 	};

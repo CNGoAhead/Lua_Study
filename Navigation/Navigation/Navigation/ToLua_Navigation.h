@@ -101,15 +101,15 @@ namespace NS_Navigation {
 		return;
 	}
 
-	std::vector<int> Search(Nav * nav, int sx, int sy, int ex, int ey, int dps, int speed, int duration) {
+	std::vector<int> Search(Nav * nav, float sx, float sy, int ex, int ey, int dps, int speed, int duration) {
 		return nav->Search(sx, sy, ex, ey, dps, speed, duration);
 	}
 
-	std::vector<int> FlagSearch(Nav * nav, int sx, int sy, unsigned short flag, int dps, int speed, int duration) {
+	std::vector<int> FlagSearch(Nav * nav, float sx, float sy, unsigned short flag, int dps, int speed, int duration) {
 		return nav->FlagSearch(sx, sy, flag, dps, speed, duration);
 	}
 
-	std::vector<int> MultiSearch(Nav * nav, int sx, int sy, std::vector<int> & ends, int dps, int speed, int duration) {
+	std::vector<int> MultiSearch(Nav * nav, float sx, float sy, std::vector<int> & ends, int dps, int speed, int duration) {
 		std::vector<std::pair<int, int>> es;
 		for (int i = 0; i < ends.size(); i += 2)
 			es.push_back(std::pair<int, int>(ends[i], ends[i + 1]));
@@ -202,9 +202,10 @@ namespace NS_Navigation {
 
 	int Lua_Search(lua_State * L) {
 		auto nav = (Nav*)tolua_tousertype(L, 1, 0);
-		int sx, sy, ex, ey, dps, speed, duration = -1;
-		luaval_to_int32(L, 2, &sx);
-		luaval_to_int32(L, 3, &sy);
+		double sx, sy;
+		int ex, ey, dps, speed, duration = -1;
+		luaval_to_number(L, 2, &sx);
+		luaval_to_number(L, 3, &sy);
 		luaval_to_int32(L, 4, &ex);
 		luaval_to_int32(L, 5, &ey);
 		luaval_to_int32(L, 6, &dps);
@@ -220,10 +221,11 @@ namespace NS_Navigation {
 
 	int Lua_FlagSearch(lua_State * L) {
 		auto nav = (Nav*)tolua_tousertype(L, 1, 0);
-		int sx, sy, dps, speed, duration = -1;
+		double sx, sy;
+		int dps, speed, duration = -1;
 		unsigned short flag;
-		luaval_to_int32(L, 2, &sx);
-		luaval_to_int32(L, 3, &sy);
+		luaval_to_number(L, 2, &sx);
+		luaval_to_number(L, 3, &sy);
 		luaval_to_ushort(L, 4, &flag);
 		luaval_to_int32(L, 5, &dps);
 		luaval_to_int32(L, 6, &speed);
@@ -238,10 +240,11 @@ namespace NS_Navigation {
 
 	int Lua_MultiSearch(lua_State * L) {
 		auto nav = (Nav*)tolua_tousertype(L, 1, 0);
-		int sx, sy, dps, speed, duration = -1;
+		double sx, sy;
+		int dps, speed, duration = -1;
 		std::vector<int> ends;
-		luaval_to_int32(L, 2, &sx);
-		luaval_to_int32(L, 3, &sy);
+		luaval_to_number(L, 2, &sx);
+		luaval_to_number(L, 3, &sy);
 		luaval_to_std_vector_int(L, 4, &ends);
 		luaval_to_int32(L, 5, &dps);
 		luaval_to_int32(L, 6, &speed);

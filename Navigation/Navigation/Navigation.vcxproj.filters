@@ -63,6 +63,9 @@
     <ClInclude Include="Navigation\ToLua_Navigation.h">
       <Filter>头文件\Navigation</Filter>
     </ClInclude>
+    <ClInclude Include="Navigation\TimeCost.h">
+      <Filter>头文件\Navigation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

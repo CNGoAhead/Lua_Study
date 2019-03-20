@@ -7,34 +7,39 @@ namespace NS_Navigation {
 	class Ground : public IGround
 	{
 	public:
-		Ground() : IGround(), _x(0), _y(0), _h(0), _f(0) {
+		Ground() : IGround(), _x(0), _y(0), _h(0), _f(0), _a(0) {
 		};
 		~Ground() {
 		};
 
-		virtual IGround * Init(int x, int y, int h, unsigned short f);
-		virtual int GetX() const;
-		virtual int GetY() const;
-		virtual int GetHeight() const;
-		virtual unsigned short GetFlag() const;
-		virtual IGround * SetX(int x);
-		virtual IGround * SetY(int y);
-		virtual IGround * SetHeight(int h);
-		virtual IGround * AddHeight(int h);
-		virtual IGround * SubHeight(int h);
-		virtual IGround * SetFlag(unsigned short f);
-		virtual IGround * AddFlag(unsigned short f);
-		virtual IGround * SubFlag(unsigned short f);
-		virtual bool HasFlag(unsigned short f);
+		inline virtual IGround * Init(int x, int y, int h, unsigned short f);
+		inline virtual int GetX() const;
+		inline virtual int GetY() const;
+		inline virtual int GetHeight() const;
+		inline virtual int GetAttraction() const;
+		inline virtual unsigned short GetFlag() const;
+		inline virtual IGround * SetX(int x);
+		inline virtual IGround * SetY(int y);
+		inline virtual IGround * SetHeight(int h);
+		inline virtual IGround * AddHeight(int h);
+		inline virtual IGround * SubHeight(int h);
+		inline virtual IGround * SetFlag(unsigned short f);
+		inline virtual IGround * AddFlag(unsigned short f);
+		inline virtual IGround * SubFlag(unsigned short f);
+		inline virtual IGround * SetAttraction(int a);
+		inline virtual IGround * AddAttraction(int a);
+		inline virtual IGround * SubAttraction(int a);
+		inline virtual bool HasFlag(unsigned short f);
 
 	private:
 		int _x;
 		int _y;
 		int _h;
+		int _a;
 		unsigned short _f;
 	};
 
-	inline IGround * Ground::Init(int x, int y, int h, unsigned short f)
+	IGround * Ground::Init(int x, int y, int h, unsigned short f)
 	{
 		_x = x;
 		_y = y;
@@ -43,75 +48,98 @@ namespace NS_Navigation {
 		return this;
 	}
 
-	inline int Ground::GetX() const
+	int Ground::GetX() const
 	{
 		return _x;
 	}
 
-	inline int Ground::GetY() const
+	int Ground::GetY() const
 	{
 		return _y;
 	}
 
-	inline int Ground::GetHeight() const
+	int Ground::GetHeight() const
 	{
 		return _h;
 	}
 
-	inline unsigned short Ground::GetFlag() const
+	inline int Ground::GetAttraction() const
+	{
+		return _a;
+	}
+
+	unsigned short Ground::GetFlag() const
 	{
 		return _f;
 	}
 
-	inline IGround * Ground::SetX(int x)
+	IGround * Ground::SetX(int x)
 	{
 		_x = x;
 		return this;
 	}
 
-	inline IGround * Ground::SetY(int y)
+	IGround * Ground::SetY(int y)
 	{
 		_y = y;
 		return this;
 	}
 
-	inline IGround * Ground::SetHeight(int h)
+	IGround * Ground::SetHeight(int h)
 	{
 		_h = h;
 		return this;
 	}
 
-	inline IGround * Ground::AddHeight(int h)
+	IGround * Ground::AddHeight(int h)
 	{
 		_h += h;
 		return this;
 	}
 
-	inline IGround * Ground::SubHeight(int h)
+	IGround * Ground::SubHeight(int h)
 	{
 		_h -= h;
 		return this;
 	}
 
-	inline IGround * Ground::SetFlag(unsigned short f)
+	IGround * Ground::SetFlag(unsigned short f)
 	{
 		_f = f;
 		return this;
 	}
 
-	inline IGround * Ground::AddFlag(unsigned short f)
+	IGround * Ground::AddFlag(unsigned short f)
 	{
 		_f |= f;
 		return this;
 	}
 
-	inline IGround * Ground::SubFlag(unsigned short f)
+	IGround * Ground::SubFlag(unsigned short f)
 	{
 		_f &= ~f;
 		return this;
 	}
 
-	inline bool Ground::HasFlag(unsigned short f)
+	inline IGround * Ground::SetAttraction(int a)
+	{
+		_a = a;
+		return this;
+	}
+
+	inline IGround * Ground::AddAttraction(int a)
+	{
+		_a += a;
+		return this;
+	}
+
+	inline IGround * Ground::SubAttraction(int a)
+	{
+		_a -= a;
+		return this;
+	}
+
+	bool Ground::HasFlag(unsigned short f)
 	{
 		return _f & f;
 	}

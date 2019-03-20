@@ -42,7 +42,7 @@ namespace NS_Navigation {
 
 		virtual int CalcuDistance(int index1, int index2, int dps, int speed) = 0;
 
-		virtual INavigation * ClearMoveGroundHeight(std::vector<int> & path) = 0;
+		virtual INavigation * AddWallAttraction(std::vector<int> & path) = 0;
 
 		virtual std::vector<int> Search(int sx, int sy, int ex, int ey, int dps, int speed, int duration = 0) = 0;
 

@@ -2,6 +2,8 @@
 
 #include "..\Public\INavigation.h"
 
+#define WALL_MAX_DISTANCE 80
+
 namespace NS_Navigation {
 
 	template<typename M, typename D>
@@ -18,21 +20,21 @@ namespace NS_Navigation {
 		virtual ~Navigation() {
 		};
 
-		virtual Navigation<M, D> * Init(std::shared_ptr<M> & map);
+		inline virtual Navigation<M, D> * Init(std::shared_ptr<M> & map);
 
-		virtual std::shared_ptr<M> GetMap();
+		inline virtual std::shared_ptr<M> GetMap();
 
-		virtual Navigation<M, D> * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D> & o);
+		inline virtual Navigation<M, D> * AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D> & o);
 
-		virtual Navigation<M, D> * AddClose(std::unordered_set<int> & close, int index1, int index2 = -1);
+		inline virtual Navigation<M, D> * AddClose(std::unordered_set<int> & close, int index1, int index2 = -1);
 
-		virtual bool IsInClose(std::unordered_set<int> & close, int index1, int index2 = -1);
+		inline virtual bool IsInClose(std::unordered_set<int> & close, int index1, int index2 = -1);
 
-		virtual int ExpectDistance(int index1, int index2);
+		inline virtual int ExpectDistance(int index1, int index2);
 
-		virtual int CalcuDistance(int index1, int index2, int dps, int speed);
+		inline virtual int CalcuDistance(int index1, int index2, int dps, int speed);
 
-		virtual Navigation<M, D> * ClearMoveGroundHeight(std::vector<int> & path);
+		inline virtual Navigation<M, D> * AddAttraction(std::vector<int> & path);
 
 	private:
 
@@ -47,21 +49,21 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	inline Navigation<M, D> * Navigation<M, D>::Init(std::shared_ptr<M> & map)
+	Navigation<M, D> * Navigation<M, D>::Init(std::shared_ptr<M> & map)
 	{
 		_map = map;
 		return this;
 	}
 
 	template<typename M, typename D>
-	inline Navigation<M, D> * Navigation<M, D>::AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D>& o)
+	Navigation<M, D> * Navigation<M, D>::AddOpen(std::priority_queue<std::shared_ptr<D>, std::vector<std::shared_ptr<D>>, Compare> & open, std::shared_ptr<D>& o)
 	{
 		open.push(o);
 		return this;
 	}
 
 	template<typename M, typename D>
-	inline Navigation<M, D> * Navigation<M, D>::AddClose(std::unordered_set<int>& close, int index1, int index2)
+	Navigation<M, D> * Navigation<M, D>::AddClose(std::unordered_set<int>& close, int index1, int index2)
 	{
 		if (index2 == -1)
 			close.insert(index1);
@@ -77,7 +79,7 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	inline bool Navigation<M, D>::IsInClose(std::unordered_set<int>& close, int index1, int index2)
+	bool Navigation<M, D>::IsInClose(std::unordered_set<int>& close, int index1, int index2)
 	{
 		if (index2 == -1)
 			return close.find(index1) != close.end();
@@ -92,7 +94,7 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	inline int Navigation<M, D>::ExpectDistance(int index1, int index2)
+	int Navigation<M, D>::ExpectDistance(int index1, int index2)
 	{
 		int x = abs(_map->GetX(index1) - _map->GetX(index2));
 		int y = abs(_map->GetY(index1) - _map->GetY(index2));
@@ -100,21 +102,26 @@ namespace NS_Navigation {
 	}
 
 	template<typename M, typename D>
-	inline int Navigation<M, D>::CalcuDistance(int index1, int index2, int dps, int speed)
+	int Navigation<M, D>::CalcuDistance(int index1, int index2, int dps, int speed)
 	{
-		int h = _map->GetGround(index2)->GetHeight();
+		auto g = _map->GetGround(index2);
+		int h = g->GetHeight();
 		int dis = ExpectDistance(index1, index2);
-		return dis + h / dps * speed;
+		if (h == 0)
+			return dis;
+		int a = g->GetAttraction();
+		return dis + min((((h - a) / dps) + 1) * speed, WALL_MAX_DISTANCE);
 	}
 
 	template<typename M, typename D>
-	inline Navigation<M, D> * Navigation<M, D>::ClearMoveGroundHeight(std::vector<int> & path)
+	Navigation<M, D> * Navigation<M, D>::AddAttraction(std::vector<int> & path)
 	{
-		for (auto p : path)
+		for (auto index : path)
 		{
-			auto g = _map->GetGround(p);
-			if (g && g->GetHeight() > 0)
-				g->SetHeight(0);
+			auto g = _map->GetGround(index);
+			int h = g->GetHeight();
+			if (h > 0)
+				g->SetAttraction(h);
 		}
 		return this;
 	}

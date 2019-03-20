@@ -202,7 +202,7 @@ namespace NS_Navigation {
 		}
 		std::reverse(path.begin(), path.end());
 
-		Navigation<M, D>::ClearMoveGroundHeight(path);
+		Navigation<M, D>::AddWallAttraction(path);
 		
 		return path;
 	}
@@ -260,7 +260,7 @@ namespace NS_Navigation {
 		}
 		std::reverse(path.begin(), path.end());
 
-		Navigation<M, D>::ClearMoveGroundHeight(path);
+		Navigation<M, D>::AddWallAttraction(path);
 
 		return path;
 	}

@@ -22,6 +22,12 @@ extern "C" {
 int costTime = 0;
 // extern TimeCost G_T = TimeCost();
 
+int a = []() {
+	std::ios::sync_with_stdio(false);
+	std::cin.tie(nullptr);
+	return 0;
+}();
+
 namespace NS_Navigation {
 
 	typedef typename AStarNavigation<Map<Ground>, Distance> Nav;

@@ -163,7 +163,7 @@ public:
 		_onChange.Clear(tag);
 	}
 
-	operator T() {
+	operator T&() {
 		return Get();
 	}
 

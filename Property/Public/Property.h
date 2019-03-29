@@ -10,6 +10,7 @@ enum class Access
 {
 	Read = 0x01,
 	Write = 0x02,
+	ReadWrite = 0x03,
 };
 
 template<typename T>
@@ -23,9 +24,8 @@ T Decrypt(T value) {
 }
 
 template<>
-int * Encrypt(int * value) {
-	(*value) = *value * 2 + 3;
-	return value;
+int Encrypt(int value) {
+	return value * 2 + 3;
 }
 
 template<>
@@ -39,9 +39,8 @@ double Decrypt(double value) {
 }
 
 template<>
-double * Encrypt(double * value) {
-	(*value) = int(*value) * 2 + 3 + std::fmod(value, 1);
-	return value;
+double Encrypt(double value) {
+	return int(value) * 2 + 3 + std::fmod(value, 1);
 }
 
 template<>
@@ -50,9 +49,8 @@ float Decrypt(float value) {
 }
 
 template<>
-float * Encrypt(float * value) {
-	(*value) = int(*value) * 2 + 3 + std::fmodf(value, 1);
-	return value;
+float Encrypt(float value) {
+	return int(value) * 2 + 3 + std::fmodf(value, 1);
 }
 
 template<typename T>
@@ -65,27 +63,36 @@ public:
 	T value;
 };
 
-template<
-	typename Super,
-	typename T,
-	int Flag = (0x01 | 0x02),
-	typename G = std::function<T & ()>,
-	typename S = std::function<void(const T &)>
->
-class PropertyRef
+template<typename T>
+class PropAccessException<T&> : std::exception
 {
+public:
+	PropAccessException(const char * const message, const T & v) : std::exception(message) {
+		value = v;
+	}
+	T value;
+};
+
+template<
+	typename C,
+	typename T,
+	Access F = Access::ReadWrite,
+	typename G = std::function<T&()>,
+	typename S = std::function<void(const T&)>
+>
+class PropertyBase {
 private:
-	template<typename P1 = Super, typename P2 = T>
+	template<typename P1 = T, typename P2 = C>
 	class Event
 	{
 	public:
-		void operator()(P1 & p1, const P2 & p2) {
+		void operator()(const P1 & p1, P2 & p2) {
 			for (auto calls : _calls)
 				for (auto call : calls.second)
 					call(p1, p2);
 		}
 
-		void Add(void * tag, const std::function<void(P1 &, const P2 &)> & call) {
+		void Add(void * tag, const std::function<void(const P1 &, P2 &)> & call) {
 			_calls[int(tag)].push_back(call);
 		}
 
@@ -94,53 +101,16 @@ private:
 		}
 
 	private:
-		std::unordered_map<long long, std::vector<std::function<void(P1 &, const P2 &)>>> _calls;
+		std::unordered_map<long long, std::vector<std::function<void(const P1 &, P2 &)>>> _calls;
 	};
 
 
 public:
-	PropertyRef(Super * t, T v) : _bLocked(false), _this(t), _value(v) {
+	PropertyBase(T v = T(), C * c = nullptr, const G & g = G(), const S & s = S())
+		: _bLocked(false), _value(v), _this(c), _get(g), _set(s)
+	{
 	}
-	PropertyRef(Super * t, T v, const G & g) : _bLocked(false), _this(t), _value(v), _get(g) {
-	}
-	PropertyRef(Super * t, T v, const S & s) : _bLocked(false), _this(t), _value(v), _set(s) {
-	}
-	PropertyRef(Super * t, T v, const G & g, const S & s) : _bLocked(false), _this(t), _value(v), _get(g), _set(s) {
-	}
-	~PropertyRef() {
-	}
-
-	T & RealGet() {
-		return _value;
-	}
-
-	void RealSet(const T & v) {
-		_value = v;
-	}
-
-	T & Get() {
-		if (!(Flag | int(Access::Read)))
-			throw PropAccessException<T>("this property is write only", RealGet());
-
-		if (_get)
-			return _get();
-		return RealGet();
-	}
-
-	void Set(const T & v) {
-		if (!(Flag | int(Access::Write)))
-			throw PropAccessException<T>("this property is read only", v);
-
-		if (_bLocked)
-			return;
-
-		if (&v != &_value)
-			_onChange(*_this, v);
-
-		if (_set)
-			_set(v);
-		else
-			RealSet(v);
+	~PropertyBase() {
 	}
 
 	void Lock() {
@@ -155,179 +125,256 @@ public:
 		_bLocked = !_bLocked;
 	}
 
-	void Bind(void * tag, const std::function<void(Super&, const T&)> & call) {
+	void Bind(void * tag, const std::function<void(const T&, C*)> & call) {
 		_onChange.Add(tag, call);
 	}
 
 	void UnBind(void * tag) {
 		_onChange.Clear(tag);
+	}
+
+protected:
+	bool _bLocked;
+	C * _this;
+	T _value;
+	G _get;
+	S _set;
+	Event<T, C*> _onChange;
+};
+
+template<
+	typename C,
+	typename T,
+	Access F = Access::ReadWrite,
+	typename G = std::function<T & ()>,
+	typename S = std::function<void(const T &)>
+>
+class PropertyRef : public PropertyBase<C, T, F, G, S>
+{
+public:
+	PropertyRef(T v) : PropertyBase<C, T, F, G, S>(v){
+	}
+	PropertyRef(C * t, T v) : PropertyBase<C, T, F, G, S>(v, t) {
+	}
+	PropertyRef(C * t, T v, const G & g) : PropertyBase<C, T, F, G, S>(v, t, g) {
+	}
+	PropertyRef(C * t, T v, const S & s) : PropertyBase<C, T, F, G, S>(v, t, G(), s) {
+	}
+	PropertyRef(C * t, T v, const G & g, const S & s) : PropertyBase<C, T, F, G, S>(v, t, g, s) {
+	}
+	~PropertyRef() {
+	}
+
+	T & RealGet() {
+		return PropertyBase<C, T, F, G, S>::_value;
+	}
+
+	void RealSet(const T & v) {
+		PropertyBase<C, T, F, G, S>::_value = v;
+	}
+
+	T & Get() {
+		if (!(F | int(Access::Read)))
+			throw PropAccessException<T>("this property is write only", RealGet());
+
+		if (PropertyBase<C, T, F, G, S>::_get)
+			return PropertyBase<C, T, F, G, S>::_get();
+		return RealGet();
+	}
+
+	void Set(const T & v) {
+		if (!(F | int(Access::Write)))
+			throw PropAccessException<T>("this property is read only", v);
+
+		if (PropertyBase<C, T, F, G, S>::_bLocked)
+			return;
+
+		if (&v != &PropertyBase<C, T, F, G, S>::_value)
+			PropertyBase<C, T, F, G, S>::_onChange(v, PropertyBase<C, T, F, G, S>::_this);
+
+		if (PropertyBase<C, T, F, G, S>::_set)
+			PropertyBase<C, T, F, G, S>::_set(v);
+		else
+			RealSet(v);
 	}
 
 	operator T&() {
 		return Get();
 	}
 
-	T & operator=(const T & v) {
+	T & operator=(T & v) {
 		Set(v);
-		return RealGet();
+		return Get();
 	}
 
 	T * operator->() {
 		return &Get();
 	}
-
-private:
-	bool _bLocked;
-	Super * _this;
-	T _value;
-	G _get;
-	S _set;
-	Event<Super, T> _onChange;
 };
 
 template<
-	typename Super,
+	typename C,
 	typename T,
-	int Flag = (0x01 | 0x02),
-	typename G = std::function<T & ()>,
-	typename S = std::function<void(const T &)>
+	Access F = Access::ReadWrite,
+	typename G = std::function<T()>,
+	typename S = std::function<void(const T)>
 >
-class Property
+class Property : public PropertyBase<C, T, F, G, S>
 {
-private:
-	template<typename P1 = Super, typename P2 = T>
-	class Event
-	{
-	public:
-		void operator()(P1 & p1, const P2 & p2) {
-			for (auto calls : _calls)
-				for (auto call : calls.second)
-					call(p1, p2);
-		}
-
-		void Add(void * tag, const std::function<void(P1 &, const P2 &)> & call) {
-			_calls[int(tag)].push_back(call);
-		}
-
-		void Clear(void * tag) {
-			_calls[int(tag)].clear();
-		}
-
-	private:
-		std::unordered_map<long long, std::vector<std::function<void(P1 &, const P2 &)>>> _calls;
-	};
-
-
 public:
-	Property(Super * t, T v) : _bLocked(false), _this(t), _value(v) {
+	Property(T v) : PropertyBase<C, T, F, G, S>(v) {
+		Set(v);
 	}
-	Property(Super * t, T v, const G & g) : _bLocked(false), _this(t), _value(v), _get(g) {
+	Property(C * t, T v) : PropertyBase<C, T, F, G, S>(v, t) {
+		Set(v);
 	}
-	Property(Super * t, T v, const S & s) : _bLocked(false), _this(t), _value(v), _set(s) {
+	Property(C * t, T v, const G & g) : PropertyBase<C, T, F, G, S>(v, t, g) {
+		Set(v);
 	}
-	Property(Super * t, T v, const G & g, const S & s) : _bLocked(false), _this(t), _value(v), _get(g), _set(s) {
+	Property(C * t, T v, const S & s) : PropertyBase<C, T, F, G, S>(v, t, G(), s) {
+		Set(v);
+	}
+	Property(C * t, T v, const G & g, const S & s) : PropertyBase<C, T, F, G, S>(v, t, g, s) {
+		Set(v);
 	}
 	~Property() {
 	}
 
 	T RealGet() {
-		return Decrypt<T>(_value);
+		return Decrypt<T>(PropertyBase<C, T, F, G, S>::_value);
 	}
 
 	void RealSet(const T & v) {
-		_value = v;
-		Encrypt<T*>(&_value);
+		PropertyBase<C, T, F, G, S>::_value = Encrypt<T>(v);
 	}
 
 	T Get() {
-		if (!(Flag | int(Access::Read)))
+		if (!(int(F) | int(Access::Read)))
 			throw PropAccessException<T>("this property is write only", RealGet());
 
-		if (_get)
-			return _get();
+		if (PropertyBase<C, T, F, G, S>::_get)
+			return PropertyBase<C, T, F, G, S>::_get();
 		return RealGet();
 	}
 
-	void Set(const T & v) {
-		if (!(Flag | int(Access::Write)))
+	void Set(T v) {
+		if (!(int(F) | int(Access::Write)))
 			throw PropAccessException<T>("this property is read only", v);
 
-		if (_bLocked)
+		if (PropertyBase<C, T, F, G, S>::_bLocked)
 			return;
 
-		if (&v != &_value)
-			_onChange(*_this, v);
+		if (v != RealGet())
+			PropertyBase<C, T, F, G, S>::_onChange(v, PropertyBase<C, T, F, G, S>::_this);
 
-		if (_set)
-			_set(v);
+		if (PropertyBase<C, T, F, G, S>::_set)
+			PropertyBase<C, T, F, G, S>::_set(v);
 		else
 			RealSet(v);
-	}
-
-	void Lock() {
-		_bLocked = true;
-	}
-
-	void Unlock() {
-		_bLocked = false;
-	}
-
-	void ToggleLock() {
-		_bLocked = !_bLocked;
-	}
-
-	void Bind(void * tag, const std::function<void(Super&, const T&)> & call) {
-		_onChange.Add(tag, call);
-	}
-
-	void UnBind(void * tag) {
-		_onChange.Clear(tag);
 	}
 
 	operator T() {
 		return Get();
 	}
 
-	T operator=(const T & v) {
+	T operator=(T v) {
 		Set(v);
-		return RealGet();
+		return Get();
 	}
 
-private:
-	bool _bLocked;
-	Super * _this;
-	T _value;
-	G _get;
-	S _set;
-	Event<Super, T> _onChange;
 };
 
 template<
-	typename Super,
 	typename C,
-	int Flag = (0x01 | 0x02),
-	bool IsClass = std::is_class<C>::value,
-	typename T = PropertyRef<Super, C, Flag, std::function<C & ()>, std::function<void(const C &)>>,
-	typename F = Property<Super, C, Flag, std::function<C ()>, std::function<void(const C &)>>
+	typename T,
+	Access Flag = Access::ReadWrite,
+	typename G = std::function<T&()>,
+	typename S = std::function<void(T&)>,
+	bool IsClass = std::is_class<T>::value,
+	bool IsRef = std::is_reference<T>::value
 >
 struct Prop {
 	using Type = void;
 };
 
 template<
-	typename Super,
 	typename C,
-	int Flag
+	typename T,
+	Access Flag
 >
-struct Prop <Super, C, Flag, true, PropertyRef<Super, C, Flag, std::function<C & ()>, std::function<void(const C &)>>, Property<Super, C, Flag, std::function<C()>, std::function<void(const C &)>>> {
-	using Type = PropertyRef<Super, C, Flag, std::function<C & ()>, std::function<void(const C &)>>;
+struct Prop <C, T&, Flag, std::function<T & ()>, std::function<void(T&)>, true, true> {
+	using Type = PropertyRef<C, T, Flag, std::function<T & ()>, std::function<void(T&)>>;
 };
 
 template<
-	typename Super,
 	typename C,
-	int Flag
+	typename T,
+	Access Flag
 >
-struct Prop <Super, C, Flag, false, PropertyRef<Super, C, Flag, std::function<C & ()>, std::function<void(const C &)>>, Property<Super, C, Flag, std::function<C()>, std::function<void(const C &)>>> {
-	using Type = Property<Super, C, Flag, std::function<C()>, std::function<void(const C &)>>;
+struct Prop <C, T&, Flag, std::function<T()>, std::function<void(T)>, false, true> {
+	using Type = Property<C, T, Flag, std::function<T()>, std::function<void(T)>>;
+};
+
+
+template<
+	typename C,
+	typename T,
+	Access Flag,
+	typename G,
+	typename S
+>
+struct Prop <C, T&, Flag, G, S, true, true> {
+	using Type = PropertyRef<C, T, Flag, G, S>;
+};
+
+template<
+	typename C,
+	typename T,
+	Access Flag,
+	typename G,
+	typename S
+>
+struct Prop <C, T&, Flag, G, S, false, true> {
+	using Type = Property<C, T, Flag, G, S>;
+};
+
+template<
+	typename C,
+	typename T,
+	Access Flag
+>
+struct Prop <C, T, Flag, std::function<T & ()>, std::function<void(T&)>, true, false> {
+	using Type = PropertyRef<C, T, Flag, std::function<T & ()>, std::function<void(T&)>>;
+};
+
+template<
+	typename C,
+	typename T,
+	Access Flag
+>
+struct Prop <C, T, Flag, std::function<T()>, std::function<void(T)>, false, false> {
+	using Type = Property<C, T, Flag, std::function<T()>, std::function<void(T)>>;
+};
+
+
+template<
+	typename C,
+	typename T,
+	Access Flag,
+	typename G,
+	typename S
+>
+struct Prop <C, T, Flag, G, S, true, false> {
+	using Type = PropertyRef<C, T, Flag, G, S>;
+};
+
+template<
+	typename C,
+	typename T,
+	Access Flag,
+	typename G,
+	typename S
+>
+struct Prop <C, T, Flag, G, S, false, false> {
+	using Type = Property<C, T, Flag, G, S>;
 };

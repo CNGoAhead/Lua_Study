@@ -1,10 +1,10 @@
 require('Base.Init')
-require('socket')
+local socket = require('Debug.socket')
 
 local caetimer, caetick = require('Debug.Timer')()
 
 local function Sleep(n)
-    socket.select(nil, nil, n)
+    -- socket.select(nil, nil, n)
 end
 
 Tick.Begin()
@@ -76,10 +76,31 @@ print('over')
 local count = 0
 local cost = 0
 
+local tree = RBTree.new(function(a, b)
+    return a.t < b.t
+end,
+function(a, b)
+    a.c = a.c + b.c
+end
+)
+
 while 1 do
     now = socket.gettime()
-    Tick.Tick()
-
+    -- Tick.Tick()
+    tree:Insert({t = math.random(1, 1000), c = math.random(1, 1000)})
+    local l = tree:LTop()
+    print('L', l.t, l.c)
+    local r = tree:RTop()
+    print('R', r.t, r.c)
+    local last
+    for _, v in ipairs(tree:ToVector()) do
+        if last then
+            assert(v.t > last.t)
+        end
+        print(v.t, v.c)
+        last = v
+    end
+    print('Min Max', tree:MinMaxDep())
     -- caetick(socket.gettime() - now)
     cost = cost + socket.gettime() - now
     count = count + 1

@@ -1,4 +1,4 @@
-require('socket')
+local socket = require('Debug.socket')
 
 local __run__ = false
 local __now__ = 0

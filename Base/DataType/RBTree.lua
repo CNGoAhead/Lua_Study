@@ -6,6 +6,14 @@ local Color = {
     B = 2,
 }
 
+local NilNode = {}
+setmetatable(NilNode, {
+    __index = {_color = Color.B},
+    __newindex = function()
+        return
+    end
+})
+
 local function MakeNode(node)
     if type(node) == 'table' and node.__is_node__ then
         return node
@@ -42,11 +50,11 @@ local function RTop(_, node)
     return node
 end
 
-local function Unlink(_, parent, child, flag)
+local function Unlink(tree, parent, child, flag)
     if child then
         child._parent = nil
     end
-    if not parent or parent == child then
+    if not parent or parent == NilNode or parent == child then
         return
     end
     if flag == 'l' or parent._left == child then
@@ -59,13 +67,13 @@ local function Unlink(_, parent, child, flag)
 end
 
 local function Link(tree, parent, child, flag)
-    if not child or parent == child then
+    if not child or child == NilNode or parent == child then
         return
     end
-    if not parent then
+    if not parent or parent == NilNode then
         tree.entry = child
         child._color = Color.B
-        child._parent = nil
+        child._parent = NilNode
         return
     end
     if not flag and tree._lfunc(child.key, parent.key) or flag == 'l' then
@@ -84,12 +92,12 @@ end
 
 local function LRotate(_, node)
     local c = node
-    local r = node._right
-    if not r then
+    if not c._right then
         return
     end
-    local p = node._parent
-    local rl = r and r._left
+    local r = c._right or NilNode
+    local p = c._parent or NilNode
+    local rl = r._left or NilNode
     local flag = Unlink(_, p, c)
     Unlink(_, c, r, 'r')
     Unlink(_, r, rl, 'l')
@@ -100,12 +108,12 @@ end
 
 local function RRotate(_, node)
     local c = node
-    local l = node._left
-    if not l then
+    if not c._left then
         return
     end
-    local p = node._parent
-    local lr = l and l._right
+    local l = c._left or NilNode
+    local p = c._parent or NilNode
+    local lr = l._right or NilNode
     local flag = Unlink(_, p, c)
     Unlink(_, c, l, 'l')
     Unlink(_, l, lr, 'r')
@@ -117,9 +125,6 @@ end
 local function LSRotate(_, node)
     local c = node
     local r = node._right
-    if not r then
-        return
-    end
     local p = node._parent
     local flag = Unlink(_, p, c)
     Unlink(_, c, r, 'r')
@@ -130,9 +135,6 @@ end
 local function RSRotate(_, node)
     local c = node
     local l = node._left
-    if not l then
-        return
-    end
     local p = node._parent
     local flag = Unlink(_, p, c)
     Unlink(_, c, l, 'l')
@@ -141,6 +143,56 @@ local function RSRotate(_, node)
 end
 
 local function AdjustTreeOnInsert(tree, node, flag)
+    local c, p, g, u
+    local function flash(n)
+        c = n
+        p = c._parent or NilNode
+        g = p._parent or NilNode
+    end
+
+    flash(node)
+
+    while c ~= NilNode and p._color == Color.R do
+        if p == g._left then
+            u = g._right or NilNode
+            if u._color == Color.R then
+                p._color = Color.B
+                u._color = Color.B
+                g._color = Color.R
+                flash(g)
+            elseif c == p._right then
+                LRotate(tree, p)
+                flash(p)
+            end
+            p._color = Color.B
+            g._color = Color.R
+            RRotate(tree, g)
+        elseif p == g._right then
+            u = g._left or NilNode
+            if u._color == Color.R then
+                p._color = Color.B
+                u._color = Color.B
+                g._color = Color.R
+                flash(g)
+            elseif c == p._left then
+                RRotate(tree, p)
+                flash(p)
+            end
+            p._color = Color.B
+            g._color = Color.R
+            LRotate(tree, g)
+        else
+            c._color = Color.B
+        end
+        flash(c)
+    end
+
+    tree.entry._color = Color.B
+
+    if true then
+        return
+    end
+
     if not node then
         return
     end

@@ -278,55 +278,61 @@ local function AdjustTreeOnDelete(tree, node)
         br = b._right or NilNode
     end
 
-    while c ~= tree.entry and c._color == Color.B do
+    while c ~= NilNode and c ~= tree.entry and c._color == Color.B do
         if c == p._left then
             flashB(p._right)
-            if b._color == Color.B then
-                b._color = Color.R
-                p._color = Color.B
+            if b._color == Color.R then
+                b._color = Color.B
+                p._color = Color.R
                 LRotate(tree, p)
                 flash(c)
                 flashB(p._right)
+            else
+                if bl._color == Color.B and br._color == Color.B then
+                    b._color = Color.R
+                    flash(p)
+                else
+                    if br._color == Color.B then
+                        bl._color = Color.B
+                        b._color = Color.R
+                        RRotate(tree, b)
+                        flash(c)
+                        flashB(p._right)
+                    end
+                    b._color = p._color
+                    p._color = Color.B
+                    br._color = Color.B
+                    LRotate(tree, p)
+                    flash(tree.entry)
+                end
             end
-            if bl._color == Color.B and br._color == Color.B then
-                b._color = Color.R
-                flash(p)
-            elseif br._color == Color.B then
-                bl._color = Color.B
-                b._color = Color.R
-                RRotate(tree, b)
-                flash(c)
-                flashB(p._right)
-            end
-            b._color = p._color
-            p._color = Color.B
-            br._color = Color.B
-            LRotate(tree, p)
-            flash(tree.entry)
         else
             flashB(p._left)
-            if b._color == Color.B then
-                b._color = Color.R
-                p._color = Color.B
+            if b._color == Color.R then
+                b._color = Color.B
+                p._color = Color.R
                 RRotate(tree, p)
                 flash(c)
                 flashB(p._left)
+            else
+                if bl._color == Color.B and br._color == Color.B then
+                    b._color = Color.R
+                    flash(p)
+                else
+                    if bl._color == Color.B then
+                        br._color = Color.B
+                        b._color = Color.R
+                        LRotate(tree, b)
+                        flash(c)
+                        flashB(p._left)
+                    end
+                    b._color = p._color
+                    p._color = Color.B
+                    bl._color = Color.B
+                    RRotate(tree, p)
+                    flash(tree.entry)
+                end
             end
-            if bl._color == Color.B and br._color == Color.B then
-                b._color = Color.R
-                flash(p)
-            elseif bl._color == Color.B then
-                br._color = Color.B
-                b._color = Color.R
-                LRotate(tree, b)
-                flash(c)
-                flashB(p._left)
-            end
-            b._color = p._color
-            p._color = Color.B
-            bl._color = Color.B
-            RRotate(tree, p)
-            flash(tree.entry)
         end
     end
 

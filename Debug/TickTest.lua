@@ -84,10 +84,24 @@ function(a, b)
 end
 )
 
+local test = {}
+local test2 = {}
+
+for i = 1, 20 do
+    table.insert(test, i)
+end
+
+for i = 1, 20 do
+    local k = math.random(1, 100) % #test + 1
+    tree:Insert({t = test[k]})
+    table.insert(test2, {t = test[k]})
+    table.remove(test, k)
+end
+
 while 1 do
     now = socket.gettime()
+    assert(tree:Assert())
     -- Tick.Tick()
-    tree:Insert({t = math.random(1, 1000), c = math.random(1, 1000)})
     local l = tree:LTop()
     print('L', l.t, l.c)
     local r = tree:RTop()
@@ -100,7 +114,11 @@ while 1 do
         print(v.t, v.c)
         last = v
     end
-    print('Min Max', tree:MinMaxDep())
+    local k = math.random(1, 100) % #test2 + 1
+    print('Delete', test2[k].t)
+    tree:Delete(test2[k])
+    table.remove(test2, k)
+
     -- caetick(socket.gettime() - now)
     cost = cost + socket.gettime() - now
     count = count + 1

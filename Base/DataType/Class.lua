@@ -54,12 +54,12 @@ local function InitClass(class, supers)
     for _, v in ipairs(supers) do
         if v.__create__ then
             class.__create__ = function(...)
-                return v.new(...)
+                return v.New(...)
             end
             break
         end
     end
-    class.new = function(...)
+    class.New = function(...)
         local instance = class.__create__(...)
         setmetatable(instance, {__index = class})
         instance.class = class

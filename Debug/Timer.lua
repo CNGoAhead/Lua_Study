@@ -50,13 +50,13 @@ local function _timerFunc(dt)
     _trigger(_timerGroup, dt)
 
     --触发Node定时器
-    for i=#_timerNodes,1,-1 do
-        local node = _timerNodes[i]
-        if not _trigger(node._timerGroup, dt, node) then
-            node._timerGroup = nil
-            table.remove(_timerNodes, i)
-        end
-    end
+    -- for i=#_timerNodes,1,-1 do
+    --     local node = _timerNodes[i]
+    --     if not _trigger(node._timerGroup, dt, node) then
+    --         node._timerGroup = nil
+    --         table.remove(_timerNodes, i)
+    --     end
+    -- end
 end
 
 --开启全局定时器
@@ -96,6 +96,7 @@ function Timer.addTimer(callback, interval, timerKey)
     -- end
 
     timerKey = timerKey or _getRandomTimerKey()
+
     _timerGroup.handlers[timerKey] = {callback, interval or 0, 0}
 
     --正在移除则清掉

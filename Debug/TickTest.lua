@@ -1,13 +1,15 @@
 require('Base.Init')
-local socket = require('Debug.socket')
+require('socket')
 
 local caetimer, caetick = require('Debug.Timer')()
 
 local function Sleep(n)
-    -- socket.select(nil, nil, n)
+    socket.select(nil, nil, n)
 end
 
-Tick.Begin()
+local tick = Ticker.New(0.01, 1000)
+
+tick:Begin()
 
 local now = socket.gettime()
 local last = now
@@ -48,20 +50,20 @@ local last = now
 --     3
 -- )
 
-for i=1,5 do
-    local d = math.random(0, 10000) * 0.0001 + 0.02
-    Tick.AddTick(
+for i=1, 10 do
+    local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
+    tick:SetTimer(
     function(diff)
         print(d, diff)
         -- assert(math.abs(diff - d) < 0.01)
     end,
-    nil,
-    d
+    d,
+    nil
 )
 end
 
--- for i = 1, 1000000 do
---     local d = math.random(0, 10000) * 0.0001
+-- for i = 1, 100000 do
+--     local d = math.random(0, 10000) * 0.0001 + 0.02
 --     caetimer.addTimer(
 --     function(diff)
 --         -- print(d, diff)
@@ -76,56 +78,67 @@ print('over')
 local count = 0
 local cost = 0
 
-local tree = RBTree.new(function(a, b)
-    return a.t < b.t
-end,
-function(a, b)
-    a.c = a.c + b.c
-end
-)
+-- local tree = RBTree.New(function(a, b)
+--     return a.t < b.t
+-- end,
+-- function(a, b)
+--     a.c = a.c + b.c
+-- end
+-- )
 
-local test = {}
-local test2 = {}
+-- local test = {}
+-- local test2 = {}
 
-for i = 1, 20 do
-    table.insert(test, i)
-end
+-- for i = 1, 200 do
+--     table.insert(test, i)
+-- end
 
-for i = 1, 20 do
-    local k = math.random(1, 100) % #test + 1
-    tree:Insert({t = test[k]})
-    table.insert(test2, {t = test[k]})
-    table.remove(test, k)
-end
+-- for i = 1, 200 do
+--     local k = math.random(1, 1000) % #test + 1
+--     tree:Insert({t = test[k]})
+--     table.insert(test2, {t = test[k]})
+--     table.remove(test, k)
+-- end
 
 while 1 do
+    -- for i=1,100 do
+    --     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
+    --     -- caetimer.addTimer(
+    --     tick:SetTimer(
+    --     function(diff)
+    --         -- print(d, diff)
+    --         -- assert(math.abs(diff - d) < 0.01)
+    --     end,
+    --     d,
+    --     nil
+    -- )
+    -- end
     now = socket.gettime()
-    assert(tree:Assert())
-    -- Tick.Tick()
-    local l = tree:LTop()
-    print('L', l.t, l.c)
-    local r = tree:RTop()
-    print('R', r.t, r.c)
-    local last
-    for _, v in ipairs(tree:ToVector()) do
-        if last then
-            assert(v.t > last.t)
-        end
-        print(v.t, v.c)
-        last = v
-    end
-    local k = math.random(1, 100) % #test2 + 1
-    print('Delete', test2[k].t)
-    tree:Delete(test2[k])
-    table.remove(test2, k)
+    tick:Tick(now - last)
+    -- caetick(now - last)
+    -- assert(tree:Assert())
+    -- local l = tree:LTop()
+    -- print('L', l.t, l.c)
+    -- local r = tree:RTop()
+    -- print('R', r.t, r.c)
+    -- local last
+    -- for _, v in ipairs(tree:ToVector()) do
+    --     if last then
+    --         assert(v.t > last.t)
+    --     end
+    --     print(v.t, v.c)
+    --     last = v
+    -- end
+    -- local k = math.random(1, 1000) % #test2 + 1
+    -- print('Delete', test2[k].t)
+    -- tree:Delete(test2[k])
+    -- table.remove(test2, k)
 
-    -- caetick(socket.gettime() - now)
     cost = cost + socket.gettime() - now
     count = count + 1
-    -- print('cost / count = ', cost, count)
-    if count >= 100000 then
-        break
-    end
+    print('cost / count = ', cost, count)
     last = now
-    Sleep(0.01)
+    Sleep(3)
 end
+
+print('end')

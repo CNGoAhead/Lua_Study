@@ -330,7 +330,7 @@ local p2 = 3
 local p3 = 4
 local p4 = 5
 
-local t = Test.new()
+local t = Test.New()
 
 function a(b, c, d)
     print(b, c, d)
@@ -376,7 +376,7 @@ end
 
 local Data = require('ECS.Data')
 
-local d = Data.new()
+local d = Data.New()
 
 d:AddProp('prop', 1)
 
@@ -400,7 +400,7 @@ local Map = require('SearchPath.Map')
 
 local BinHeap = require('SearchPath.BinHeap')
 
-local heap = BinHeap.new():Init()
+local heap = BinHeap.New():Init()
 
 for i = 1, 1000 do
     heap:Add(math.random(1, 90))
@@ -412,13 +412,13 @@ local iiii = 1
 
 local map
 for i = 1, 82 do
-    map = Map.new():Init(90, 90)
+    map = Map.New():Init(90, 90)
 end
 
 while 1 do
     print('----RUN----')
     local m = {}
-    -- local map = Map.new():Init(90, 90)
+    -- local map = Map.New():Init(90, 90)
     map:GetGround(map:GetIndex(1, map.width)).height = 0
     map:GetGround(map:GetIndex(map.width, 1)).height = 0
     local path
@@ -476,7 +476,7 @@ while 1 do
     -- print(socket.gettime() - s)
     -- s = socket.gettime()
     -- for i = 1, 90 do
-    --     local b = BinHeap.new():Init(nil, m)
+    --     local b = BinHeap.New():Init(nil, m)
     -- end
     -- print(socket.gettime() - s)
     -- heap:Remove(1)

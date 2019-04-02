@@ -1,6 +1,3 @@
--- local RBTree = {}
--- local RBNode = {}
-
 local Color = {
     R = 1,
     B = 2,
@@ -18,7 +15,11 @@ local function MakeNode(node)
     if type(node) == 'table' and node.__is_node__ then
         return node
     end
-    return {key = node, _color = Color.R}
+    local tbl = {key = node, _color = Color.R, _left = false, _right = false}
+    local meta = {_parent = false}
+    setmetatable(meta, {__mode = 'v'})
+    setmetatable(tbl, meta)
+    return tbl
 end
 
 
@@ -50,7 +51,7 @@ local function RTop(_, node)
     return node
 end
 
-local function Unlink(tree, parent, child, flag)
+local function Unlink(_, parent, child, flag)
     if child then
         child._parent = nil
     end
@@ -135,7 +136,7 @@ local function Replace(tree, node, newnode)
     Link(tree, p, newnode, flag)
 end
 
-local function AdjustTreeOnInsert(tree, node, flag)
+local function AdjustTreeOnInsert(tree, node)
     local c, p, g, u
     local function flash(n)
         c = n
@@ -187,84 +188,6 @@ local function AdjustTreeOnInsert(tree, node, flag)
     end
 
     tree.entry._color = Color.B
-
-    if true then
-        return
-    end
-
-    if not node then
-        return
-    end
-    local p = node._parent
-    local g = p and p._parent
-    if not p and node._color == Color.R then
-        node._color = Color.B
-        -- if flag then
-        --     LRotate(tree, node)
-        -- else
-        --     RRotate(tree, node)
-        -- end
-        -- return
-    end
-    if not p or not g then
-        return
-    end
-    if g._left and g._left._color == Color.R and g._right and g._right._color == Color.R then
-        g._left._color = Color.B
-        g._right._color = Color.B
-        g._color = Color.R
-        return AdjustTreeOnInsert(tree, g, tree._lfunc(node.key, g.key))
-    elseif p._color == Color.R then
-        if node == p._right then
-            -- if not g._parent then
-            --     if node == p._left then
-            --         RSRotate(tree, p)
-            --     end
-            --     LSRotate(tree, g)
-            -- else
-                LRotate(tree, p)
-                return AdjustTreeOnInsert(tree, p)
-            -- end
-        else
-            -- if not g._parent then
-            --     if node == p._right then
-            --         LSRotate(tree, p)
-            --     end
-            --     RSRotate(tree, g)
-            -- else
-                p._color = Color.B
-                g._color = Color.R
-                RRotate(tree, g)
-                return AdjustTreeOnInsert(tree, g._right)
-            -- end
-        end
-        -- if node == p._right and (not g._left or g._left._color == Color.B) or (not g._right or g._right._color == Color.B) then
-        --     LRotate(tree, p)
-        --     return AdjustTreeOnInsert(tree, p)
-        -- elseif node == p._left and (not g._left or g._left._color == Color.B) or (not g._right or g._right._color == Color.B) then
-        --     p._color = Color.B
-        --     g._color = Color.R
-        --     RRotate(tree, g)
-        --     return AdjustTreeOnInsert(tree, g._right)
-        -- end
-        -- if g._right == p then
-        --     if p._left == node then
-        --         RRotate(tree, p)
-        --         node, p = p, node
-        --     end
-        --     p._color = Color.B
-        --     g._color = Color.R
-        --     LRotate(tree, g)
-        -- else
-        --     if p._right == node then
-        --         LRotate(tree, p)
-        --         node, p = p, node
-        --     end
-        --     p._color = Color.B
-        --     g._color = Color.R
-        --     RRotate(tree, g)
-        -- end
-    end
 end
 
 local function AdjustTreeOnDelete(tree, node)
@@ -351,7 +274,7 @@ local function Insert(tree, node)
     if not root then
         tree.entry = node
         node._color = Color.B
-        return
+        return node.key
     end
     local last
     local f
@@ -369,7 +292,12 @@ local function Insert(tree, node)
         end
     end
     Link(tree, last, node, f)
-    AdjustTreeOnInsert(tree, node)
+    if f ~= 'e' then
+        AdjustTreeOnInsert(tree, node)
+        return node.key
+    else
+        return last.key
+    end
 end
 
 local function Delete(tree, node)
@@ -388,10 +316,8 @@ local function Delete(tree, node)
 
     if not l then
         nc = r or NilNode
-        -- Replace(tree, c, nc)
     elseif not r then
         nc = l or NilNode
-        -- Replace(tree, c, nc)
     else
         nc = LTop(tree, r) or NilNode
         color = nc._color
@@ -405,19 +331,7 @@ local function Delete(tree, node)
         AdjustTreeOnDelete(tree, nc)
     end
 
-    if true then
-        return
-    end
-
-    local nc = ((r and l) and LTop(tree, r)) or l or r
-    color = nc._color
-    Unlink(tree, c, l, 'l')
-    Unlink(tree, c, r, 'r')
-    local flag = Unlink(tree, p, c)
-    Unlink(tree, nc._parent, nc)
-    Link(tree, p, nc, flag)
-    Link(tree, nc, l, 'l')
-    Link(tree, nc, r, 'r')
+    return node.key
 end
 
 local function ToVector(node, vec)
@@ -448,7 +362,13 @@ local function MakeTree(lfunc, efunc)
     local tree = {__is_tree__ = true, _lfunc = lfunc, _efunc = efunc}
     tree.Insert = Insert
     tree.Delete = Delete
-    tree.Find = GetNode
+    tree.Find = function(self, key)
+        local node = GetNode(self, key)
+        return node and node.key or nil
+    end
+    tree.Clear = function()
+        tree.entry = nil
+    end
     tree.ToVector = function(self)
         return ToVector(self.entry)
     end
@@ -468,6 +388,6 @@ end
 
 return function()
     return {
-        new = MakeTree
+        New = MakeTree
     }
 end

@@ -28,7 +28,7 @@ function Map:Init(width, height)
     self.height = height
     for i = 1, self.width * self.height do
         local x, y = self:GetPos(i)
-        table.insert(self.grounds, Ground.new():Init(x, y, math.floor(math.random() + 0.2)))
+        table.insert(self.grounds, Ground.New():Init(x, y, math.floor(math.random() + 0.2)))
     end
     return self
 end

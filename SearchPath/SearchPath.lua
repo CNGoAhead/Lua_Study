@@ -21,7 +21,7 @@ local function CalcuDistance(pos1, pos2, dps, speed)
 end
 
 local function SearchNearGround(map, ground, target)
-    local ret = BinHeap.new():Init(function(a, b)
+    local ret = BinHeap.New():Init(function(a, b)
         return a.distance < b.distance
     end)
     diffX = {1, 1, -1, -1, 1, -1, 0, 0}
@@ -144,7 +144,7 @@ local function SearchPath(map, begin, over)
     local path = {index}
     local distance = ExpectDistance(begin, over)
     local moveClose = {}
-    local heap = BinHeap.new():Init(function(a, b)
+    local heap = BinHeap.New():Init(function(a, b)
         local la = a.distance + a.walk
         local lb = b.distance + b.walk
         if la == lb then

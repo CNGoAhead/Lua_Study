@@ -103,8 +103,8 @@ function Ticker:Call()
                 head = head.Next
             end
             self:SetTimerList(v.Head, diff)
-            -- 如果跑一轮的时间比diff时间还长会导致越来越卡
-            -- self:SetTimerList(v.Head, math.ceil(df/diff) * diff)
+            -- 如果Tick一轮的时间比diff时间还长会导致越来越卡
+            -- self:SetTimerList(v.Head, math.ceil(df / diff) * diff)
         end
         tree[self.__group_count__] = nil
     end

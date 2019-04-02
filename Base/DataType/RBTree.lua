@@ -308,7 +308,6 @@ local function Delete(tree, node)
     local c = node
     local l = node._left
     local r = node._right
-    local p = node._parent
     local nc
     local nr
 

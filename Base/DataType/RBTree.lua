@@ -123,10 +123,16 @@ local function RRotate(_, node)
 end
 
 local function Replace(tree, node, newnode)
+    if not node or node == NilNode then
+        return
+    end
     local p, l, r = node._parent, node._left, node._right
-    Link(tree, p, newnode, Unlink(tree, p, node))
-    Link(tree, newnode, l, Unlink(tree, node, l, 'l'))
-    Link(tree, newnode, r, Unlink(tree, node, r, 'r'))
+    local flag = Unlink(tree, p, node)
+    Unlink(tree, node, l, 'l')
+    Unlink(tree, node, r, 'r')
+    Link(tree, newnode, r, 'r')
+    Link(tree, newnode, l, 'l')
+    Link(tree, p, newnode, flag)
 end
 
 local function AdjustTreeOnInsert(tree, node, flag)
@@ -396,7 +402,7 @@ local function Delete(tree, node)
     Replace(tree, c, nc)
 
     if nc and nc ~= NilNode and color == Color.B then
-        AdjustTreeOnDelete(tree, nc._right)
+        AdjustTreeOnDelete(tree, nc)
     end
 
     if true then
@@ -430,7 +436,7 @@ local function Assert(node)
         if node._color == Color.R and p._color == Color.R then
             return false
         end
-        return not Assert(node._left) or not Assert(node._right)
+        return Assert(node._left) and Assert(node._right)
     end
     return true
 end

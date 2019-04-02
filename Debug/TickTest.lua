@@ -50,11 +50,10 @@ local last = now
 --     3
 -- )
 
-for i=1, 10 do
+for i=1, 1000000 do
     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
     tick:SetTimer(
     function(diff)
-        print(d, diff)
         -- assert(math.abs(diff - d) < 0.01)
     end,
     d,
@@ -114,7 +113,7 @@ while 1 do
     -- )
     -- end
     now = socket.gettime()
-    tick:Tick(now - last)
+    tick:Tick(0.001)
     -- caetick(now - last)
     -- assert(tree:Assert())
     -- local l = tree:LTop()
@@ -138,7 +137,7 @@ while 1 do
     count = count + 1
     print('cost / count = ', cost, count)
     last = now
-    Sleep(3)
+    Sleep(0.001)
 end
 
 print('end')

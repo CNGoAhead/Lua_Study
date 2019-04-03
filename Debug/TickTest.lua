@@ -7,7 +7,7 @@ local function Sleep(n)
     socket.select(nil, nil, n)
 end
 
-local tick = Ticker.New(0.01, 1000)
+local tick = Ticker.New(0.01, 16)
 
 tick:Begin()
 
@@ -54,6 +54,7 @@ for i=1, 1000000 do
     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
     tick:SetTimer(
     function(diff)
+        -- print(d, diff)
         -- assert(math.abs(diff - d) < 0.01)
     end,
     d,
@@ -100,12 +101,12 @@ local cost = 0
 -- end
 
 while 1 do
-    -- for i=1,100 do
+    -- for i=1,3 do
     --     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
     --     -- caetimer.addTimer(
     --     tick:SetTimer(
     --     function(diff)
-    --         -- print(d, diff)
+    --         print(d, diff)
     --         -- assert(math.abs(diff - d) < 0.01)
     --     end,
     --     d,
@@ -113,7 +114,7 @@ while 1 do
     -- )
     -- end
     now = socket.gettime()
-    tick:Tick(0.001)
+    tick:Tick(now - last)
     -- caetick(now - last)
     -- assert(tree:Assert())
     -- local l = tree:LTop()
@@ -136,6 +137,9 @@ while 1 do
     cost = cost + socket.gettime() - now
     count = count + 1
     print('cost / count = ', cost, count)
+    if count >= 100 then
+        break
+    end
     last = now
     Sleep(0.001)
 end

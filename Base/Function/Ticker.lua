@@ -45,29 +45,16 @@ local Ticker = {
     __cur_group_id__ = 0,
     __tag_timer__ = {},
     __group_count__ = 0,
+    __max_group_count = math.pow(2, 51),
+    __can_skip__ = false
 }
 
-local function lfunc(groupsA, groupsB)
-    return groupsA.GroupCount < groupsB.GroupCount
-end
-
-local function efunc(groupsA, groupsB)
-    for diff, v in pairs(groupsB.TimerGroups) do
-        if not groupsA.TimerGroups[diff] then
-            groupsA.TimerGroups[diff] = v
-        elseif v.Head and v.Tail then
-            v.Head.Last = groupsA.TimerGroups[diff].Tail
-            groupsA.TimerGroups[diff].Tail.Next = v.Head
-            groupsA.TimerGroups[diff].Tail = v.Tail
-        end
-    end
-end
-
-function Ticker.New(mindiff, maxgroup)
+function Ticker.New(mindiff, maxgroup, canskip)
     local instance = {}
     setmetatable(instance, {__index = Ticker})
     instance.__min_diff__ = mindiff or 0.01
     instance.__max_group_id__ = maxgroup or 10
+    instance.__can_skip__ = canskip or false
     instance.__group_diff__ = instance.__min_diff__ * instance.__max_group_id__
     for _ = 1, instance.__max_group_id__ do
         table.insert(instance.__timer__, {})
@@ -102,9 +89,12 @@ function Ticker:Call()
                 head.LastCall = self.__now__
                 head = head.Next
             end
-            self:SetTimerList(v.Head, diff)
-            -- 如果Tick一轮的时间比diff时间还长会导致越来越卡
-            -- self:SetTimerList(v.Head, math.ceil(df / diff) * diff)
+            if self.__can_skip__ then
+                -- 如果Tick一轮的时间比diff时间还长会导致越来越卡
+                self:SetTimerList(v.Head, math.ceil(df / diff) * diff)
+            else
+                self:SetTimerList(v.Head, diff)
+            end
         end
         tree[self.__group_count__] = nil
     end
@@ -144,6 +134,9 @@ function Ticker:Tick(diff)
         self:Call()
         if self.__cur_group_id__ == self.__max_group_id__ then
             self.__group_count__ = self.__group_count__ + 1
+            if self.__group_count__ >= self.__max_group_count then
+                self.__group_count__ = 1
+            end
         end
         self.__cur_group_id__ = self:NextGroupId(self.__cur_group_id__, 1)
         loop = loop - 1
@@ -232,7 +225,7 @@ function Ticker:SetTimer(call, diff, tag)
     diff = self:ConstraintDiff(diff)
     local timer = New(Timer)
     timer.Call = call
-    timer.LastCall = self.__now__
+    timer.LastCall = self.__now__ + self.__min_diff__ - self.__time__
     self:AddToTag(tag, timer)
     self:SetTimerList(timer, diff)
     return timer

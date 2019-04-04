@@ -153,6 +153,13 @@ local function NewProp(p)
             if self._OnChange then
                 self._OnChange(value)
             end
+            if t.__binder__ and t.__binder__[name] then
+                for _, fs in pairs(t.__binder__[name]) do
+                    for _, f in pairs(fs) do
+                        f(value)
+                    end
+                end
+            end
         end
         if self._OnSet then
             self._OnSet(value)

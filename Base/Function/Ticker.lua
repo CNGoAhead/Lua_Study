@@ -45,7 +45,7 @@ local Ticker = {
     __cur_group_id__ = 0,
     __tag_timer__ = {},
     __group_count__ = 0,
-    __max_group_count = math.pow(2, 51),
+    __max_group_count = math.floor(math.pow(2, 32)),
     __can_skip__ = false
 }
 

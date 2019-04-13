@@ -90,6 +90,12 @@ local function initPropTable(tbl)
         else
             oldindex = nil
         end
+        local oldnewindex = metatable.__newindex
+        if type(oldnewindex) ~= 'function' then
+            oldnewindex = nil
+        end
+
+        metatable = setmetatable({}, metatable)
 
         metatable.__index = function(t, key)
             local prop = t.__propgss__['prop_' .. key]
@@ -109,11 +115,6 @@ local function initPropTable(tbl)
                     return nil
                 end
             end
-        end
-
-        local oldnewindex = metatable.__newindex
-        if type(oldnewindex) ~= 'function' then
-            oldnewindex = nil
         end
 
         metatable.__newindex = function(t, key, value)

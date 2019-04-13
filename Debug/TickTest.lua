@@ -1,6 +1,9 @@
 require('Base.Init')
 require('socket')
 
+
+local log = Log.New()
+
 local caetimer, caetick = require('Debug.Timer')()
 
 local function Sleep(n)

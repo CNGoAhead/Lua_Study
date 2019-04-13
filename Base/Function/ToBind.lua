@@ -30,12 +30,12 @@ local function Bind(t, k, call, tag, callnow)
     end
 end
 
-local function UnBind(t, k, tag)
+local function Unbind(t, k, tag)
     if t.__binder__ and t.__binder__[k] and t.__binder__[k][tag] then
         t.__binder__[k][tag] = nil
     end
 end
 
 return function()
-    return Bind, UnBind
+    return Bind, Unbind
 end

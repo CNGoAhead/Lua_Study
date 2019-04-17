@@ -1,22 +1,8 @@
 local Aoe = {}
 
--- local function Vec2(x, y)
---     if type(x) == 'table' then
---         return {x = x[1] or x.x, y = x[2] or x.y}
---     else
---         return {x = x, y = y}
---     end
--- end
-
--- local function Sub(vecA, vecB)
---     return {x = vecA.x - vecB.x, y = vecA.y - vecB.y}
--- end
-
--- local function Dot(vecA, vecB)
---     return vecA.x * vecB.x + vecA.y * vecB.y
--- end
-
-local bTestNewAoe = false
+local function Equal(vecA, vecB)
+    return math.abs(vecA[1] - vecB[1]) <= 0.000001 and math.abs(vecA[2] - vecB[2]) <= 0.000001 and (not (vecA[3] and vecB[3]) and true or math.abs(vecA[3] - vecB[3]) <= 0.000001)
+end
 
 local function Add(vecA, vecB)
     return {vecA[1] + vecB[1], vecA[2] + vecB[2]}
@@ -34,8 +20,28 @@ local function Dot(vecA, vecB)
     return vecA[1] * vecB[1] + vecA[2] * vecB[2]
 end
 
+local function Crs(vecA, vecB)
+    return {0, 0, vecA[1] * vecB[2] - vecA[2] * vecB[1]}
+end
+
+local function CrsV(vecA, vecB)
+    return vecA[1] * vecB[2] - vecA[2] * vecB[1]
+end
+
+local function Mod2(vec)
+    return vec[1] * vec[1] + vec[2] * vec[2]
+end
+
 local function Mod(vec)
     return math.sqrt(vec[1] * vec[1] + vec[2] * vec[2])
+end
+
+local function Mod32(vec)
+    return vec[1] * vec[1] + vec[2] * vec[2] + vec[3] * vec[3]
+end
+
+local function Mod3(vec)
+    return math.sqrt(vec[1] * vec[1] + vec[2] * vec[2] + vec[3] * vec[3])
 end
 
 local function Normal(vec)
@@ -44,8 +50,8 @@ local function Normal(vec)
 end
 
 local function Rotate(vec, angle)
-    local c = math.cos(angle)
-    local s = math.sin(angle)
+    local c = math.cos(math.rad(angle))
+    local s = math.sin(math.rad(angle))
     return {vec[1] * c + vec[2] * s, -vec[1] * s + vec[2] * c}
 end
 
@@ -65,10 +71,6 @@ local function ConstructNewPlane(posA, posB, posC)
         local AP = Sub(pos, posA)
         local PB = Dot(AP, AB)
         local PC = Dot(AP, AC)
-        -- local x = pos[1] - posA[1]
-        -- local y = pos[2] - posA[2]
-        -- local PB = x * AB[1] + y * AB[2]
-        -- local PC = x * AC[1] + y * AC[2]
         return (C2 * PB - CB * PC) * Denominator, (B2 * PC - CB * PB) * Denominator
     end
 end
@@ -77,7 +79,7 @@ end
 --
 --
 -- *      *
-local function Rect(x, y)
+local function Rect(_, x, y)
     return x >= 0 and x <= 1 and y >= 0 and y <= 1 and x + y <= 2
 end
 
@@ -85,18 +87,25 @@ end
 --
 --
 -- *      *
-local function Triangle(x, y)
+local function Triangle(_, x, y)
     return x >= 0 and x <= 1 and y >= 0 and y <= 1 and x + y <= 1
 end
 
--- *
---     *
---       *
--- *      *
-local function Sector(x, y)
-    return x >= 0 and x <= 1 and y >= 0 and y <= 1 and x * x + y * y <= 1
+local function Quadrant1(_, x, y)
+    return x >= 0 and y >= 0
 end
 
+local function NotQuadrant1(_, x, y)
+    return not(x > 0 and y > 0)
+end
+
+local function Quadrant12(_, _, y)
+    return y >= 0
+end
+
+local function Quadrant34(_, _, y)
+    return y <= 0
+end
 
 local function IsIn(Geometry, posA, posB, posC, poses, quickCheck)
     local ret = {}
@@ -105,360 +114,197 @@ local function IsIn(Geometry, posA, posB, posC, poses, quickCheck)
     end
     local GetXY = ConstructNewPlane(posA, posB, posC)
     for _, v in ipairs(poses) do
-        if (not quickCheck and true or quickCheck(v)) and Geometry(GetXY(v)) then
+        if (not quickCheck and true or quickCheck(v)) and Geometry(v, GetXY(v)) then
             table.insert(ret, v)
         end
     end
     return ret
 end
 
-function Aoe.isInRect(posA, posB, pos)
-    return pos[1] >= posA[1]
-        and pos[1] <= posB[1]
-        and pos[2] >= posA[2]
-        and pos[2] <= posB[2]
+local function AABB(posA, posB, x, y, r)
+    if type(x) == 'table' then
+        r = x[3]
+        y = x[2]
+        x = x[1]
+    end
+    r = r or 0
+    return x >= posA[1] - r
+        and x <= posB[1] + r
+        and y >= posA[2] - r
+        and y <= posB[2] + r
 end
 
-function Aoe.circlePoint(pointTab,target,radius)
-    local result = {}
-    local lb = {target[1] - radius, target[2] - radius}
-    local rt = {target[1] + radius, target[2] + radius}
-    for k,v in ipairs(pointTab) do
-        if Aoe.isInRect(lb, rt, v) and (v[1]-target[1])^2+(v[2]-target[2])^2<=(radius+v[3])^2 then
-            table.insert(result,v)
+local function AABBCircular(posA, posB, x, y, r)
+    if type(x) == 'table' then
+        r = x[3]
+        y = x[2]
+        x = x[1]
+    end
+    local result = x >= posA[1] - r
+                and x <= posB[1] + r
+                and y >= posA[2] - r
+                and y <= posB[2] + r
+    if result then
+        if x < posA[1] then
+            local dx = posA[1] - x
+            if y < posA[2] then
+                local dy = posA[2] - y
+                return dx * dx + dy * dy <= r * r
+            elseif y > posB[2] then
+                local dy = y - posB[2]
+                return dx * dx + dy * dy <= r * r
+            end
+        elseif x > posB[1] then
+            local dx = x - posB[1]
+            if y < posA[2] then
+                local dy = posA[2] - y
+                return dx * dx + dy * dy <= r * r
+            elseif y > posB[2] then
+                local dy = y - posB[2]
+                return dx * dx + dy * dy <= r * r
+            end
         end
     end
     return result
 end
 
-local function sectorPoint(pointTab,startPoint,radius,angle,target)
-    local direction
+local function DisPTL(posA, pos)
+    return CrsV(posA, pos) / Mod(pos)
+end
+
+local function DisPTL2(posA, pos)
+    local v = CrsV(posA, pos)
+    return (v * v) / Mod2(pos)
+end
+
+local function Sector2(poses, start, target, radius, angle)
+    local bSemiCircle = angle == 180
+    local bReseve = angle > 180
+    if bReseve then
+        angle = 360 - angle
+    end
+    local posA = start
+    local dir
     if type(target) == "number" then
-        direction = target
+        dir = Rotate({1, 0}, -target)
     else
-        direction = math.deg(math.atan((target[2]-startPoint[2])/(target[1]-startPoint[1])))
-        if target[2]-startPoint[2]<0 and target[1]-startPoint[1]<0 then
-            direction = direction + 180
-        end
-        if target[2]-startPoint[2]>0 and target[1]-startPoint[1]<0 then
-            direction = direction + 180
-        end
+        dir = Sub(target, start)
     end
 
-    local angle1 = direction-angle/2
-    local angle2 = direction+angle/2
-    angle1 = angle1<0 and angle1+360 or angle1
-    angle1 = angle1>360 and angle1-360 or angle1
-    angle2 = angle2<0 and angle2+360 or angle2
-    angle2 = angle2>360 and angle2-360 or angle2
+    if bReseve then
+        dir = Mul(dir, -1)
+    end
 
-    local posA = startPoint
-    local posB = {startPoint[1] + radius * math.cos(math.rad(angle1)), startPoint[2] + radius * math.sin(math.rad(angle1))}
-    local posC = {startPoint[1] + radius * math.cos(math.rad(angle2)), startPoint[2] + radius * math.sin(math.rad(angle2))}
-    local radius2 = radius * radius
+    local vdirL = Rotate(dir, angle / 2)
+    local vdirR = Rotate(dir, -angle / 2)
+    local posC = Add(posA, bSemiCircle and dir or vdirR)
+    local posB = Add(posA, vdirL)
     local function quick(pos)
         local x = pos[1] - posA[1]
         local y = pos[2] - posA[2]
-        return x * x + y * y <= radius2
+        local r = pos[3] + radius
+        return x * x + y * y <= r * r
     end
-    return IsIn(Sector, posA, posB, posC, pointTab, quick)
+    return IsIn(bSemiCircle and Quadrant12 or (bReseve and NotQuadrant1 or Quadrant1), posA, posB, posC, poses, quick)
 end
 
-function Aoe.sectorPoint(pointTab,startPoint,radius,angle,target)
-    local direction
+function Aoe.Sector(poses, start, target, radius, angle)
+    local bSemiCircle = angle == 180
+    local bReverse = angle > 180
+    local posA = start
+    local dir
     if type(target) == "number" then
-        direction = target
+        dir = Rotate({1, 0}, -target)
     else
-        direction = math.deg(math.atan((target[2]-startPoint[2])/(target[1]-startPoint[1])))
-        if target[2]-startPoint[2]<0 and target[1]-startPoint[1]<0 then
-            direction = direction + 180
-        end
-        if target[2]-startPoint[2]>0 and target[1]-startPoint[1]<0 then
-            direction = direction + 180
-        end
+        dir = Normal(Sub(target, start))
     end
 
-    local result = {}
-    local angle1 = direction-angle/2
-    local angle2 = direction+angle/2
-    angle1 = angle1<0 and angle1+360 or angle1
-    angle1 = angle1>360 and angle1-360 or angle1
-    angle2 = angle2<0 and angle2+360 or angle2
-    angle2 = angle2>360 and angle2-360 or angle2
-    for k,v in ipairs(pointTab) do
-        local isMeet1 = false
-        local isMeet2 = false
-        if math.sqrt((v[1]-startPoint[1])*(v[1]-startPoint[1])+(v[2]-startPoint[2])*(v[2]-startPoint[2]))-v[3]<=radius then 
-            if (0<=angle1 and angle1<90) or (angle1>270 and angle1<=360) then
-                if (((v[1]-startPoint[1])*math.tan(math.rad(angle1))))<=((v[2]-startPoint[2]))+math.abs(v[3]/math.cos(math.rad(angle1))) then
-                    isMeet1 = true
-                end
-            elseif angle1==90 then
-                if v[1]<=startPoint[1]+v[3] then
-                    isMeet1 =true
-                end
-            elseif angle1==270 then
-                if v[1]>=startPoint[1]-v[3] then
-                    isMeet1 = true
-                end
-            else
-                if ((v[1]-startPoint[1])*math.tan(math.rad(angle1)))>=(v[2]-startPoint[2])-math.abs(v[3]/math.cos(math.rad(angle1))) then
-                    isMeet1 = true
-                end
-            end
+    local vdir = Rotate(dir, angle / 2)
+    local vdir2 = Rotate(dir, -angle / 2)
+    local vdir3 = bSemiCircle and dir or nil
+    local vecN = Crs(vdir, vdir3 or vdir2)
+    local vecR = Crs(vdir2, vdir3 or vdir)
+    local function quick(pos)
+        local x = pos[1] - posA[1]
+        local y = pos[2] - posA[2]
+        local r = pos[3] + radius
+        return x * x + y * y <= r * r
+    end
 
-            if (0<=angle2 and angle2<90) or (angle2>270 and angle2<=360) then
-                if ((v[1]-startPoint[1])*math.tan(math.rad(angle2)))>=(v[2]-startPoint[2])-math.abs(v[3]/math.cos(math.rad(angle2))) then
-                    isMeet2 = true
-                end
-            elseif angle2==90 then
-                if v[1]>=startPoint[1]-v[3] then
-                    isMeet2 =true
-                end
-            elseif angle2==270 then
-                if v[1]<=startPoint[1]+v[3] then
-                    isMeet2 = true
-                end
-            else
-                if ((v[1]-startPoint[1])*math.tan(math.rad(angle2)))<=(v[2]-startPoint[2])+math.abs(v[3]/math.cos(math.rad(angle2))) then
-                    isMeet2 = true
-                end
-            end
+    local function check(pos)
+        if Equal(pos, posA) then
+            return true
+        end
 
-            if isMeet1 and isMeet2 then
-                table.insert(result,v)
-            end
+        local v = Sub(pos, posA)
+
+        local r2 = pos[3] * pos[3]
+
+        if bReverse then
+            return (CrsV(vdir, v) * vecN[3] <= 0 or CrsV(vdir2, v) * vecR[3] <= 0)
+            or (vdir[1] * v[1] <= 0 and vdir[2] * v[2] <= 0 and DisPTL2(vdir, v) <= r2)
+            or (vdir2[1] * v[1] <= 0 and vdir2[2] * v[2] <= 0 and DisPTL2(vdir2, v) <= r2)
+        else
+            local n1 = CrsV(vdir, v) * vecN[3]
+            local n2 = CrsV(vdir2, v) * vecR[3]
+            return n1 == 0 or n2 == 0 or (n1 > 0 and n2 > 0)
+            or (vdir[1] * v[1] >= 0 and vdir[2] * v[2] >= 0 and DisPTL2(vdir, v) <= r2)
+            or (vdir2[1] * v[1] >= 0 and vdir2[2] * v[2] >= 0 and DisPTL2(vdir2, v) <= r2)
         end
     end
-    return result
+    local ret = {}
+    for _, v in ipairs(poses) do
+        if quick(v) and check(v) then
+            table.insert(ret, v)
+        end
+    end
+    return ret
 end
 
-local function line(pointTab,startPoint,long,wide,target)
-    local sx,sy,tx,ty = startPoint[1],startPoint[2],target[1],target[2]
+function Aoe.Rect(poses, start, target, long, wide)
+    local sx,sy,tx,ty = start[1],start[2],target[1],target[2]
     if long == "auto" then
         long = math.sqrt((tx-sx)^2+(ty-sy)^2)
     end
 
-    local dir = Normal(Sub(target, startPoint))
+    local dir = Normal(Sub(target, start))
     local bSimple = false
     local w, h
+    local lb, rt
+    -- 水平或垂直 则直接AABB
     if math.abs(dir[1]) == 1 then
         bSimple = true
         w = long * dir[1]
         h = wide / 2
+        lb = {math.min(start[1] + w, start[1]), math.min(start[2] + h, start[2] - h)}
+        rt = {math.max(start[1] + w, start[1]), math.max(start[2] + h, start[2] - h)}
     elseif math.abs(dir[2]) == 1 then
         bSimple = true
         w = wide / 2
         h = dir[2] * long
+        lb = {math.min(start[1] + w, start[1] - w), math.min(start[2] + h, start[2])}
+        rt = {math.max(start[1] + w, start[1] - w), math.max(start[2] + h, start[2])}
     end
     if bSimple then
         local ret = {}
-        local posA = {math.min(startPoint[1] + w, startPoint[1] - w), math.min(startPoint[2] + h, startPoint[2])}
-        local posB = {math.max(startPoint[1] + w, startPoint[1] - w), math.max(startPoint[2] + h, startPoint[2])}
-        for _, v in ipairs(pointTab) do
-            if Aoe.isInRect(posA, posB, v) then
+        for _, v in ipairs(poses) do
+            if AABBCircular(lb, rt, v) then
                 table.insert(ret, v)
             end
         end
         return ret
     else
-        local vdir = Rotate(dir, 90)
+        local vdir = Rotate(dir, -90)
         local halfW = Mul(vdir, wide / 2)
-        local posA = Sub(startPoint, halfW)
-        local posB = Add(posA, Mul(dir, long))
-        local posC = Add(startPoint, halfW)
-        -- local maxX = math.max(posA[1], posB[1])
-        -- local maxY = math.max(posA[2], posB[2])
-        -- local minX = math.min(posA[1], posB[1])
-        -- local minY = math.min(posA[2], posB[2])
-        -- local function quick(pos)
-        --     return pos[1] >= minX and pos[1] <= maxX and pos[2] >= minY and pos[2] <= maxY
-        -- end
-        return IsIn(Rect, posA, posB, posC, pointTab)
+        local posA = Sub(start, halfW)
+        local posB = Add(posA, dir)
+        local posC = Add(posA, vdir)
+        local posLB = {0, 0}
+        local posRT = {long, wide}
+        return IsIn(function(pos, x, y)
+            return AABBCircular(posLB, posRT, x, y, pos[3])
+        end , posA, posB, posC, poses)
     end
 end
 
-function Aoe.line(pointTab,startPoint,long,wide,target)
-    local sx,sy,tx,ty = startPoint[1],startPoint[2],target[1],target[2]
-    if long == "auto" then
-        long = math.sqrt((tx-sx)^2+(ty-sy)^2)
-    end
-    local result = {}
-    wide = wide/2
-    if sy == ty then
-        for k,v in ipairs(pointTab) do
-            if sx<tx then
-                if sx<=v[1]+v[3] and v[1]-v[3]<=sx+long and sy-wide<=v[2]+v[3] and v[2]-v[3]<=sy+wide then
-                    table.insert(result,v)
-                end
-            else
-                if sx-long<=v[1]+v[3] and v[1]-v[3]<=sx and sy-wide<=v[2]+v[3] and v[2]-v[3]<=sy+wide then
-                    table.insert(result,v)
-                end
-            end
-        end
-    elseif sx == tx then
-        for k,v in ipairs(pointTab) do
-            if sy<ty then
-                if sy<=v[2]+v[3] and v[2]-v[3]<=sy+long and sx-wide<=v[1]+v[3] and v[1]-v[3]<=sx+wide then
-                    table.insert(result,v)
-                end
-            else
-                if sy-long<=v[2]+v[3] and v[2]-v[3]<=sy and sx-wide<=v[1]+v[3] and v[1]-v[3]<=sx+wide then
-                    table.insert(result,v)
-                end
-            end
-        end
-    else
-        local d = (ty-sy)/(tx-sx)      -- 斜率
-        local a = sy-d*sx
-        local rad = math.atan(d)
-        local a1 = a-wide/math.cos(rad)
-        local a2 = a+wide/math.cos(rad)
-        local d2 = -1/d
-        local rad2 = math.atan(d2)
-        local a21 = sy-d2*sx
-        local a22 = a21+long/math.cos(rad2)
-        if sy>ty then
-            a22 = a21-long/math.cos(rad2)
-            a21,a22=a22,a21
-        end
-        for k,v in ipairs(pointTab) do
-            if v[2]>=d*v[1]+a1-v[3]/math.cos(rad) and v[2]-v[3]/math.cos(rad)<=d*v[1]+a2 and v[2]>=d2*v[1]+a21-v[3]/math.cos(rad2) and v[2]-v[3]/math.cos(rad2)<=d2*v[1]+a22 then
-                table.insert(result,v)
-            end
-        end
-    end
-    return result
-end
-
-function Aoe.chain(pointTab,startPoint,maxDis,num)
-    local result = {startPoint}
-    local dump = {}
-    local index = 1
-    while index<=num do
-        local isFind = false
-        local disTemp = 100000
-        local key = 0
-        for k,v in ipairs(pointTab) do
-            local dis = math.sqrt((v[1]-startPoint[1])*(v[1]-startPoint[1])+(v[2]-startPoint[2])*(v[2]-startPoint[2]))-startPoint[3]-v[3]
-            if not dump[v] and dis<disTemp and dis<=maxDis then
-                result[index] = v
-                disTemp = dis
-                key = k
-                isFind = true
-            end
-        end
-        if isFind then
-            startPoint = result[index]
-            dump[startPoint]=1
-            index = index+1
-        else
-            break
-        end
-    end
-    return result
-end
--- --[[
---     @desc: 
---     author:{author}
---     time:2018-05-18 10:55:49
---     --@pointTab:
--- 	--@target:{{10,23},{14,13}}
--- 	--@radius: 
---     return
--- ]]
--- function Aoe.rectOverSegmentLine(pointTab,target,radius)
---     local lp1 = Math.pointObj(target[1][1],target[1][2])
---     local lp2 = Math.pointObj(target[2][1],target[2][2])
---     local segment = Math.lineSegmentObj(lp1,lp2)
---     for _,avater in pointTab do
---         local objPos = Math.pointObj(avater[1],avater[2])
---         local pPos = Math.getProjectionPos()
---     end
--- end
-
-if bTestNewAoe then
-    for i = 1, 100 do
-        local start = {math.random(-10, 10), math.random(-10, 10)}
-        local target = {math.random(-10, 10), math.random(-10, 10)}
-        local radius = math.random(1, 5)
-        local angle = math.random(0, 360)
-        local long = math.random(1, 5)
-        local wide = math.random(1, 5)
-        local pos = {}
-        for i = 1, 1000000 do
-            table.insert(pos, {math.random(-10, 10), math.random(-10, 10), 0})
-        end
-        local t = socket.gettime()
-        local r1 = line(pos, start, long, wide, target)
-        print('----LOG----:line', socket.gettime() - t)
-        t = socket.gettime()
-        local r2 = Aoe.line(pos, start, long, wide, target)
-        print('----LOG----:Aoe.line', socket.gettime() - t)
-        local function key(p)
-            return string.format('%04d-%04d', p[1], p[2])
-        end
-        -- assert(#r1 == #r2)
-        -- if #r1 ~= #r2 then
-        --     print('----LOG----: start = ', start[1], start[2])
-        --     print('----LOG----: end = ', target[1], target[2])
-        --     print('----LOG----: wide = ', wide)
-        --     print('----LOG----: long = ', long)
-        --     local mapA = {}
-        --     local mapB = {}
-        --     for _, v in ipairs(r1) do
-        --         mapA[key(v)] = v
-        --     end
-        --     for _, v in ipairs(r2) do
-        --         mapB[key(v)] = v
-        --     end
-        --     print('----LOG----:mapA')
-        --     for k, v in pairs(mapA) do
-        --         if not mapB[k] then
-        --             dump(v)
-        --         end
-        --     end
-        --     print('----LOG----:mapB')
-        --     for k, v in pairs(mapB) do
-        --         if not mapA[k] then
-        --             dump(v)
-        --         end
-        --     end
-        -- end
-        t = socket.gettime()
-        r1 = sectorPoint(pos, start, radius, angle, target)
-        print('----LOG----:sectorPoint', socket.gettime() - t)
-        t = socket.gettime()
-        r2 = Aoe.sectorPoint(pos, start, long, wide, target)
-        print('----LOG----:Aoe.sectorPoint', socket.gettime() - t)
-        -- assert(#r1 == #r2)
-        if #r1 ~= #r2 then
-            print('----LOG----: start = ', start[1], start[2])
-            print('----LOG----: end = ', target[1], target[2])
-            print('----LOG----: rad = ', radius)
-            print('----LOG----: angle = ', angle)
-            local mapA = {}
-            local mapB = {}
-            for _, v in ipairs(r1) do
-                mapA[key(v)] = v
-            end
-            for _, v in ipairs(r2) do
-                mapB[key(v)] = v
-            end
-            print('----LOG----:mapA')
-            for k, v in pairs(mapA) do
-                if not mapB[k] then
-                    dump(v)
-                end
-            end
-            print('----LOG----:mapB')
-            for k, v in pairs(mapB) do
-                if not mapA[k] then
-                    dump(v)
-                end
-            end
-        end
-    end
-end
 return Aoe

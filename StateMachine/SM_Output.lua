@@ -1,0 +1,1 @@
+return require('model.BaseModel')

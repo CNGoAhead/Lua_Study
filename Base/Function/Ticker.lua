@@ -137,9 +137,7 @@ function Ticker:Tick(diff)
         self:Call()
         if self.__cur_group_id__ == self.__max_group_id__ then
             self.__group_count__ = self.__group_count__ + 1
-            if self.__group_count__ >= self.__max_group_count then
-                self.__group_count__ = 1
-            end
+            self:GroupCountConstraint(self.__group_count__ + 1)
         end
         self.__cur_group_id__ = self:NextGroupId(self.__cur_group_id__, 1)
         loop = loop - 1
@@ -202,9 +200,13 @@ function Ticker:AddToTag(tag, timer)
     table.insert(self.__tag_timer__[tag], timer)
 end
 
+function Ticker:GroupCountConstraint(count)
+    return count % self.__max_group_count
+end
+
 function Ticker:SetTimerList(timer, diff)
     local groupId, groupDiff = self:NextGroupId(self.__cur_group_id__, self:GetGroupId(diff))
-    local group = self:GetTimerGroup(groupId, self.__group_count__ + self:GetGroupCount(diff) + groupDiff, diff)
+    local group = self:GetTimerGroup(groupId, self:GroupCountConstraint(self.__group_count__ + self:GetGroupCount(diff) + groupDiff), diff)
     if group.Tail then
         timer.Last = group.Tail
         timer.Last.Next = timer

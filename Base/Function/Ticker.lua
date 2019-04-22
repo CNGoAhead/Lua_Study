@@ -83,16 +83,17 @@ function Ticker:Call()
     if groups then
         for diff, v in pairs(groups.TimerGroups) do
             local head = v.Head
-            local df = head and self.__now__ - head.LastCall or diff
+            local last
+            local df = head and (self.__can_skip__ and self.__now__ - head.LastCall or diff)
             while head do
-                head.Call(df)
-                head.LastCall = self.__now__
-                head = head.Next
+                last = head
+                head = last.Next
+                last.Call(df)
+                last.LastCall = self.__now__
             end
-            if self.__can_skip__ then
-                -- 如果Tick一轮的时间比diff时间还长会导致越来越卡
+            if self.__can_skip__ and v.Head then
                 self:SetTimerList(v.Head, math.ceil(df / diff) * diff)
-            else
+            elseif v.Head then
                 self:SetTimerList(v.Head, diff)
             end
         end
@@ -113,9 +114,11 @@ end
 
 function Ticker:TickCall(diff)
     local tick = self.__tick__
+    local last
     while tick do
-        tick.Call(diff)
+        last = tick
         tick = tick.Next
+        last.Call(diff)
     end
 end
 
@@ -250,7 +253,7 @@ end
 function Ticker:RemoveTimer(timer)
     if self.__tick__ == timer then
         self.__tick__ = timer.Next
-        timer.Next.Last = nil
+        self.__tick__.Last = nil
         timer.Next = nil
     else
         if timer.Last then

@@ -92,7 +92,8 @@ function Ticker:Call()
                 last.LastCall = self.__now__
             end
             if self.__can_skip__ and v.Head then
-                self:SetTimerList(v.Head, math.ceil(df / diff) * diff)
+                local over = math.floor((df - diff) / self.__group_diff__)
+                self:SetTimerList(v.Head, diff, over > 0 and over or 0)
             elseif v.Head then
                 self:SetTimerList(v.Head, diff)
             end
@@ -203,12 +204,13 @@ function Ticker:GroupCountConstraint(count)
     return (count - 1) % self.__max_group_count__ + 1
 end
 
-function Ticker:SetTimerList(timer, diff)
+function Ticker:SetTimerList(timer, diff, gdiff)
     local groupId, groupDiff = self:NextGroupId(self.__cur_group_id__, self:GetGroupId(diff))
+    groupDiff = groupDiff + (gdiff or 0)
     local group = self:GetTimerGroup(groupId, self:GroupCountConstraint(self.__group_count__ + self:GetGroupCount(diff) + groupDiff), diff)
     if group.Tail then
         timer.Last = group.Tail
-        timer.Last.Next = timer
+        group.Tail.Next = timer
         group.Tail = timer
     else
         group.Head = timer
@@ -274,6 +276,7 @@ function Ticker:RemoveTimerByTag(tag)
     for _, v in pairs(self.__tag_timer__[tag] or {}) do
         self:RemoveTimer(v)
     end
+    self.__tag_timer__[tag] = nil
 end
 
 return function()

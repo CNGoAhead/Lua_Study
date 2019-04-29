@@ -261,6 +261,69 @@ function Aoe.Sector(poses, start, target, radius, angle)
     return ret
 end
 
+function Aoe.Sector2(poses, start, target, radius, angle)
+    local bSemiCircle = angle == 180
+    local bReverse = angle > 180
+    if bReverse then
+        angle = 360 - angle
+    end
+    local posA = start
+    local dir
+    if type(target) == "number" then
+        dir = Rotate({1, 0}, -target)
+    else
+        dir = Normal(Sub(target, start))
+    end
+
+    local posB = Add(posA, Rotate(dir, angle / 2))
+    local posC = Add(posA, Rotate(dir, -angle / 2))
+    local posD = bSemiCircle and Add(posA, dir)
+
+    local ret = {}
+
+    local function quick(pos)
+        local x = math.abs(pos[1] - posA[1])
+        local y = math.abs(pos[2] - posA[2])
+        local r = pos[3] + radius
+        if x^2 + y^2 > r^2 then
+            return false
+        end
+
+        r = pos[3]
+        if x^2 + y^2 <= r^2 then
+            table.insert(ret, pos)
+            return false
+        end
+
+        x = math.abs(pos[1] - posB[1])
+        y = math.abs(pos[2] - posB[2])
+        if x^2 + y^2 <= r^2 then
+            table.insert(ret, pos)
+            return false
+        end
+        x = math.abs(pos[1] - posC[1])
+        y = math.abs(pos[2] - posC[2])
+        if x^2 + y^2 <= r^2 then
+            table.insert(ret, pos)
+            return false
+        end
+    end
+
+    local ret2 = IsIn(bSemiCircle and function(pos, x, y)
+        return y >= -pos[3]
+    end or (bReverse and function(pos, x, y)
+        return (x < 0 or y < 0) or (x <= pos[3] and y >= pos[3] and y <= radius) or (y <= pos[3] and x >= pos[3] and x <= raduis)
+    end or function(pos, x, y)
+        return (x >= 0 and y >= -pos[3]) or (y >= 0 and x >= -pos[3])
+    end), posA, posB, bSemiCircle and posD or posC, poses, quick)
+
+    for _, v in ipairs(ret2) do
+        table.insert(ret, v)
+    end
+
+    return ret
+end
+
 function Aoe.Rect(poses, start, target, long, wide)
     local sx,sy,tx,ty = start[1],start[2],target[1],target[2]
     if long == "auto" then

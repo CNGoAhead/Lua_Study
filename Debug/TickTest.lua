@@ -10,7 +10,7 @@ local function Sleep(n)
     socket.select(nil, nil, n)
 end
 
-local tick = Ticker.New(0.01, 16)
+local tick = Ticker.New(0.01, 16, true)
 
 tick:Begin()
 
@@ -53,17 +53,17 @@ local last = now
 --     3
 -- )
 
-for i=1, 1000000 do
-    local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
-    tick:SetTimer(
-    function(diff)
-        -- print(d, diff)
-        -- assert(math.abs(diff - d) < 0.01)
-    end,
-    d,
-    nil
-)
-end
+-- for i=1, 1000000 do
+--     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
+--     tick:SetTimer(
+--     function(diff)
+--         -- print(d, diff)
+--         -- assert(math.abs(diff - d) < 0.01)
+--     end,
+--     d,
+--     nil
+-- )
+-- end
 
 -- for i = 1, 100000 do
 --     local d = math.random(0, 10000) * 0.0001 + 0.02
@@ -103,6 +103,8 @@ local cost = 0
 --     table.remove(test, k)
 -- end
 
+local tags = {}
+
 while 1 do
     -- for i=1,3 do
     --     local d = tick:ConstraintDiff(math.random(0, 10000) * 0.0001 + 0.02)
@@ -116,6 +118,18 @@ while 1 do
     --     nil
     -- )
     -- end
+    local bAdd = math.random() > 0.4
+    local bSub = math.random() > 0.6
+    if bAdd then
+        table.insert(tags, tick:SetTimer(function()end, math.random() + 1))
+        print('add')
+    end
+    if bSub and #tags > 0 then
+        local id = math.random(1, #tags)
+        tick:RemoveTimer(tags[id])
+        table.remove(tags, id)
+        print('remove')
+    end
     now = socket.gettime()
     tick:Tick(now - last)
     -- caetick(now - last)
@@ -137,13 +151,10 @@ while 1 do
     -- tree:Delete(test2[k])
     -- table.remove(test2, k)
 
-    cost = cost + socket.gettime() - now
-    count = count + 1
-    print('cost / count = ', cost, count)
-    if count >= 100 then
-        break
-    end
-    last = now
+    -- cost = cost + socket.gettime() - now
+    -- count = count + 1
+    -- print('cost / count = ', cost, count)
+    -- last = now
     Sleep(0.001)
 end
 

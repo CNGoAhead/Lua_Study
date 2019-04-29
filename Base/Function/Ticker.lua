@@ -88,6 +88,8 @@ function Ticker:Call()
             while head do
                 last = head
                 head = last.Next
+                -- FIXME: 报错时总是头节点等于当前节点
+                assert(last.Call, tostring(last == v.Head))
                 last.Call(df)
                 last.LastCall = self.__now__
             end
@@ -208,15 +210,26 @@ function Ticker:SetTimerList(timer, diff, gdiff)
     local groupId, groupDiff = self:NextGroupId(self.__cur_group_id__, self:GetGroupId(diff))
     groupDiff = groupDiff + (gdiff or 0)
     local group = self:GetTimerGroup(groupId, self:GroupCountConstraint(self.__group_count__ + self:GetGroupCount(diff) + groupDiff), diff)
+    timer.Group = group
     if group.Tail then
         timer.Last = group.Tail
-        group.Tail.Next = timer
         group.Tail = timer
+        timer.Last.Next = timer
+        local tail = timer.Next
+        while tail do
+            group.Tail = tail
+            tail = tail.Next
+        end
     else
         group.Head = timer
         group.Tail = timer
+        timer.Last = nil
+        local tail = timer.Next
+        while tail do
+            group.Tail = tail
+            tail = tail.Next
+        end
     end
-    timer.Group = group
     return timer
 end
 
@@ -253,6 +266,7 @@ function Ticker:SetTick(call, tag)
     return timer
 end
 
+-- FIXME: 删除时会出错
 function Ticker:RemoveTimer(timer)
     if self.__tick__ == timer then
         self.__tick__ = timer.Next
@@ -270,6 +284,14 @@ function Ticker:RemoveTimer(timer)
             timer.Group.Tail = timer.Last
         end
     end
+    assert(not timer.Last and true or timer.Last.Next ~= timer)
+    assert(not timer.Next and true or timer.Next.Last ~= timer)
+    assert(not timer.Group and true or timer.Group.Head ~= timer)
+    assert(not timer.Group and true or timer.Group.Tail ~= timer)
+    timer.Last = nil
+    timer.Next = nil
+    timer.Group = nil
+    timer.Call = nil
 end
 
 function Ticker:RemoveTimerByTag(tag)

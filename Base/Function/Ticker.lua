@@ -88,8 +88,6 @@ function Ticker:Call()
             while head do
                 last = head
                 head = last.Next
-                -- FIXME: 报错时总是头节点等于当前节点
-                assert(last.Call, tostring(last == v.Head))
                 last.Call(df)
                 last.LastCall = self.__now__
             end
@@ -268,7 +266,6 @@ function Ticker:SetTick(call, tag)
     return timer
 end
 
--- FIXME: 删除时会出错
 function Ticker:RemoveTimer(timer)
     if self.__tick__ == timer then
         self.__tick__ = timer.Next

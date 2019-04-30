@@ -97,7 +97,9 @@ function Ticker:Call()
             elseif v.Head then
                 self:SetTimerList(v.Head, diff)
             end
+            v.Group = nil
         end
+        groups.TimerGroups = nil
         tree[self.__group_count__] = nil
     end
 end
@@ -146,10 +148,10 @@ function Ticker:Tick(diff)
 end
 
 function Ticker:GetTickGroup(groupId, groupCount)
-    local groups = New(TickGroup)
-    groups.GroupId = groupId
-    groups.GroupCount = groupCount
     if not self.__timer__[groupId][groupCount] then
+        local groups = New(TickGroup)
+        groups.GroupId = groupId
+        groups.GroupCount = groupCount
         self.__timer__[groupId][groupCount] = groups
     end
     return self.__timer__[groupId][groupCount]

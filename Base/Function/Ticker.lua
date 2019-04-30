@@ -45,7 +45,7 @@ local Ticker = {
     __cur_group_id__ = 0,
     __tag_timer__ = {},
     __group_count__ = 0,
-    __max_group_count__ = math.floor(math.pow(2, 32)),
+    __max_group_count__ = math.floor(2^32),
     __can_skip__ = false
 }
 
@@ -217,6 +217,7 @@ function Ticker:SetTimerList(timer, diff, gdiff)
         timer.Last.Next = timer
         local tail = timer.Next
         while tail do
+            tail.Group = group
             group.Tail = tail
             tail = tail.Next
         end
@@ -226,6 +227,7 @@ function Ticker:SetTimerList(timer, diff, gdiff)
         timer.Last = nil
         local tail = timer.Next
         while tail do
+            tail.Group = group
             group.Tail = tail
             tail = tail.Next
         end
@@ -284,14 +286,10 @@ function Ticker:RemoveTimer(timer)
             timer.Group.Tail = timer.Last
         end
     end
-    assert(not timer.Last and true or timer.Last.Next ~= timer)
-    assert(not timer.Next and true or timer.Next.Last ~= timer)
-    assert(not timer.Group and true or timer.Group.Head ~= timer)
-    assert(not timer.Group and true or timer.Group.Tail ~= timer)
+    timer.Call = nil
     timer.Last = nil
     timer.Next = nil
     timer.Group = nil
-    timer.Call = nil
 end
 
 function Ticker:RemoveTimerByTag(tag)

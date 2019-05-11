@@ -5,8 +5,9 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-#include <list>
+#include <queue>
 #include <map>
+#include <chrono>
 
 class Task
 {
@@ -29,17 +30,20 @@ public:
 			_threads.push_back(std::thread([&]() {
 			while (_bRun)
 			{
-				_lock.lock();
-				if (_tasks.size() > 0)
+				if (TryLock())
 				{
-					auto t = *_tasks.begin();
-					_tasks.pop_front();
-					_lock.unlock();
+					if (_tasks.size() > 0)
+					{
+						const auto t = _tasks.front();
+						_tasks.pop();
+						Unlock();
 
-					t();
+						t();
+					}
+					else
+						Unlock();
 				}
-				else
-					_lock.unlock();
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			}
 		}));
 		for (auto& t : _threads)
@@ -47,11 +51,16 @@ public:
 	}
 	~Task() {
 		_bRun = false;
-		for (auto& t : _threads)
+		Lock();
+		Unlock();
+		try
 		{
-#ifdef _WIN32
-			WaitForSingleObject(t.native_handle(), -1);
-#endif // 
+			for (auto& t : _threads)
+				t.~thread();
+		}
+		catch (const std::exception&)
+		{
+			_threads.clear();
 		}
 		_threads.clear();
 	};
@@ -59,38 +68,40 @@ public:
 	template<typename Ret, typename Func, typename... Args>
 	auto AddTask(Func && f, Args && ...args)
 	{
-		auto pf = std::shared_ptr<Future<Ret>>(new Future<Ret>());
-		_tasks.push_back([pf, &f, &args...]() {
+		auto pf = std::make_shared<Future<Ret>>();
+		auto call = [pf, f, args...]() {
 			pf->Set(f(args...));
 			pf->Valid();
 			return;
-		});
+		};
+		_tasks.push(call);
 		return pf;
 	}
 
 	template<typename Func, typename... Args>
-	auto AddTask(Func && f, Args && ...args) {
-		auto pf = std::shared_ptr<Future<void>>(new Future<void>());
-		_tasks.push_back([pf, &f, &args...]() {
+	auto AddTask(Func && f, Args && ...args)
+	{
+		auto pf = std::make_shared<Future<void>>();
+		auto call = [pf, f, args...]() {
 			f(args...);
 			pf->Valid();
 			return;
-		});
+		};
+		_tasks.push(call);
 		return pf;
 	}
 
-	void Lock(const char* key = nullptr) { if (!key) _lock.lock(); else _locks[key].lock(); }
-	void Unlock(const char* key = nullptr) { if (!key) _lock.unlock(); else _locks[key].unlock(); }
-	bool TryLock(const char* key = nullptr) { if (!key) return _lock.try_lock(); else return _locks[key].try_lock(); }
+	void Lock() { _lock.lock(); }
+	void Unlock() { _lock.unlock(); }
+	bool TryLock() { return _lock.try_lock(); }
 
 private:
 	static std::shared_ptr<Task> _pinstance;
 
 	bool _bRun = false;
 	std::mutex _lock;
-	std::map<const char *, std::mutex>_locks;
 	std::vector<std::thread> _threads;
-	std::list<std::function<void()>> _tasks;
+	std::queue<std::function<void()>> _tasks;
 };
 
 std::shared_ptr<Task> Task::_pinstance = nullptr;

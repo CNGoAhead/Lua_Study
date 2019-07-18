@@ -203,7 +203,7 @@ function Ticker:AddToTag(tag, timer)
 end
 
 function Ticker:GroupCountConstraint(count)
-    return (count - 1) % self.__max_group_count__ + 1
+    return count >= 1 and (count - 1) % self.__max_group_count__ + 1 or 0
 end
 
 function Ticker:SetTimerList(timer, diff, gdiff)
@@ -271,7 +271,9 @@ end
 function Ticker:RemoveTimer(timer)
     if self.__tick__ == timer then
         self.__tick__ = timer.Next
-        self.__tick__.Last = nil
+        if self.__tick__ then
+            self.__tick__.Last = nil
+        end
         timer.Next = nil
     else
         if timer.Last then

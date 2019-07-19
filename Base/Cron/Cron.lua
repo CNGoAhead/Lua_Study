@@ -12,36 +12,42 @@ local ExpDefine = {
     {Type = 'year', Range = {0, INT_MAX}, Diff = 1},
 }
 
-local function split(input, delimiter)
-    input = tostring(input)
-    delimiter = tostring(delimiter)
-    if (delimiter=='') then return false end
-    local pos,arr = 0, {}
-    -- for each divider found
-    for st,sp in function() return string.find(input, delimiter, pos, true) end do
-        table.insert(arr, string.sub(input, pos, st - 1))
-        pos = sp + 1
+local function split(text, sep)
+    text = tostring(text)
+    sep = tostring(sep)
+    if sep == '' then return {text} end
+    local strPos = {0}
+    local curPos = 1
+    local function AddPos(str)
+        local s, e = string.find(text, str, curPos)
+        if s and e then
+            table.insert(strPos, s - 1)
+            table.insert(strPos, e + 1)
+            curPos = e + 1
+        end
     end
-    table.insert(arr, string.sub(input, pos))
-    return arr
+    string.gsub(text, sep, AddPos)
+    table.insert(strPos, -1)
+    local result = {}
+    for k = 1, #strPos, 2 do
+        local v = strPos[k]
+        if strPos[k + 1] then
+            table.insert(result, string.sub(text, v, strPos[k + 1]))
+        end
+    end
+    return result
 end
 
 local function clone(object)
-    local lookup_table = {}
-    local function _copy(object)
-        if type(object) ~= "table" then
-            return object
-        elseif lookup_table[object] then
-            return lookup_table[object]
+    local ntbl = {}
+    for k, v in pairs(object) do
+        if type(v) == 'table' then
+            ntbl[k] = clone(v)
+        else
+            ntbl[k] = v
         end
-        local newObject = {}
-        lookup_table[object] = newObject
-        for key, value in pairs(object) do
-            newObject[_copy(key)] = _copy(value)
-        end
-        return setmetatable(newObject, getmetatable(object))
     end
-    return _copy(object)
+    return ntbl
 end
 
 local function Step(min, now, max, diff)

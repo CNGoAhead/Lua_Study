@@ -233,26 +233,22 @@ function Cron.next(expression, time)
         end
     end
 
+    local UpTime = {
+        year = UpYear,
+        month = UpMonth,
+        day = UpDay,
+        hour = UpHour,
+        min = UpMin,
+        sec = UpSec,
+        wday = UpWDay,
+    }
+
     local function GetTime()
         while true do
             local bFail = false
             for _, v in ipairs(expDefine) do
-                if Step(v.Range[1], ttime[v.Type], v.Range[2], v.Diff) ~= ttime[v.Type] then
-                    if v.Type == 'year' then
-                        UpYear()
-                    elseif v.Type == 'month' then
-                        UpMonth()
-                    elseif v.Type == 'day' then
-                        UpDay()
-                    elseif v.Type == 'hour' then
-                        UpHour()
-                    elseif v.Type == 'min' then
-                        UpMin()
-                    elseif v.Type == 'sec' then
-                        UpSec()
-                    elseif v.Type == 'wday' then
-                        UpWDay()
-                    end
+                if Step(v.Range[1], ttime[v.Type], v.Range[2], v.Diff) ~= ttime[v.Type] and UpTime[v.Type] then
+                    UpTime[v.Type]()
                     bFail = true
                 end
             end

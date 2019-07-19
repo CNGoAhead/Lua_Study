@@ -180,11 +180,7 @@ function Cron.next(expression, time)
         else
             newWDay, more = Step(expDefine[6].Range[1], ttime.wday, expDefine[6].Range[2], expDefine[6].Diff)
         end
-        ttime.day = ttime.day + newWDay - ttime.wday
-        if more ~= 0 then
-            ttime.day = ttime.day + 7
-        end
-        UpDay()
+        UpDay(newWDay - ttime.wday + 7 * more)
     end
 
     local function UpHour(dis)
@@ -272,5 +268,13 @@ end
 setmetatable(Cron, {__call = function(self, ...)
     return Cron.next(...)
 end})
+
+-- local times = {Cron('0 0 0 1 */2 1,7', os.time())}
+-- for _ = 1, 10 do
+--     table.insert(times, Cron('0 0 0 1 */2 1,7', times[#times] + 1))
+-- end
+-- for _, v in ipairs(times) do
+--     print(os.date('%c', v))
+-- end
 
 return Cron

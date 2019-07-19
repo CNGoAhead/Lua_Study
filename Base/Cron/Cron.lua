@@ -118,7 +118,6 @@ local function GetAppointTime(expression)
 end
 
 local SEC_DAY = 86400
-local SEC_WEEK = 7 * SEC_DAY
 
 function Cron.next(expression, time)
     local timeZone = os.time(os.date('!*t', SEC_DAY)) - SEC_DAY
@@ -243,11 +242,19 @@ function Cron.next(expression, time)
         wday = UpWDay,
     }
 
+    local function Check(now, define)
+        if define.Appint then
+            return NextAppoint(now[define.Type], define.Appint) == now[define.Type]
+        else
+            return Step(define.Range[1], now[define.Type], define.Range[2], define.Diff) == now[define.Type]
+        end
+    end
+
     local function GetTime()
         while true do
             local bFail = false
             for _, v in ipairs(expDefine) do
-                if Step(v.Range[1], ttime[v.Type], v.Range[2], v.Diff) ~= ttime[v.Type] and UpTime[v.Type] then
+                if not Check(ttime, v) and UpTime[v.Type] then
                     UpTime[v.Type]()
                     bFail = true
                 end

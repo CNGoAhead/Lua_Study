@@ -140,7 +140,19 @@ function Cron.next(expression, time)
         else
             newYear = Step(expDefine[7].Range[1], ttime.year + dis * expDefine[7].Diff, expDefine[7].Range[2], expDefine[7].Diff)
         end
-        ttime = os.date('!*t', os.time({year = newYear, month = expDefine[5].Range[1], day = expDefine[4].Range[1], hour = expDefine[3].Range[1], min = expDefine[2].Range[1], sec = expDefine[1].Range[1]}) - timeZone)
+        ttime = os.date('!*t',
+            os.time(
+                {
+                    year = newYear,
+                    month = expDefine[5].Appoint and expDefine[5].Appoint[1] or expDefine[5].Range[1],
+                    day = expDefine[4].Appoint and expDefine[4].Appoint[1] or expDefine[4].Range[1],
+                    hour = expDefine[3].Appoint and expDefine[3].Appoint[1] or expDefine[3].Range[1],
+                    min = expDefine[2].Appoint and expDefine[2].Appoint[1] or expDefine[2].Range[1],
+                    sec = expDefine[1].Appoint and expDefine[1].Appoint[1] or expDefine[1].Range[1]
+                }
+            )
+            - timeZone
+        )
     end
 
     local function UpMonth(dis)
@@ -154,7 +166,19 @@ function Cron.next(expression, time)
         if more ~= 0 then
             UpYear(more)
         else
-            ttime = os.date('!*t', os.time({year = ttime.year, month = newMonth, day = expDefine[4].Range[1], hour = expDefine[3].Range[1], min = expDefine[2].Range[1], sec = expDefine[1].Range[1]}) - timeZone)
+            ttime = os.date('!*t',
+                os.time(
+                    {
+                        year = ttime.year,
+                        month = newMonth,
+                        day = expDefine[4].Appoint and expDefine[4].Appoint[1] or expDefine[4].Range[1],
+                        hour = expDefine[3].Appoint and expDefine[3].Appoint[1] or expDefine[3].Range[1],
+                        min = expDefine[2].Appoint and expDefine[2].Appoint[1] or expDefine[2].Range[1],
+                        sec = expDefine[1].Appoint and expDefine[1].Appoint[1] or expDefine[1].Range[1]
+                    }
+                )
+                - timeZone
+            )
         end
     end
 
@@ -169,7 +193,19 @@ function Cron.next(expression, time)
         if more ~= 0 then
             UpMonth(more)
         else
-            ttime = os.date('!*t', os.time({year = ttime.year, month = ttime.month, day = newDay, hour = expDefine[3].Range[1], min = expDefine[2].Range[1], sec = expDefine[1].Range[1]}) - timeZone)
+            ttime = os.date('!*t',
+                os.time(
+                    {
+                        year = ttime.year,
+                        month = ttime.month,
+                        day = newDay,
+                        hour = expDefine[3].Appoint and expDefine[3].Appoint[1] or expDefine[3].Range[1],
+                        min = expDefine[2].Appoint and expDefine[2].Appoint[1] or expDefine[2].Range[1],
+                        sec = expDefine[1].Appoint and expDefine[1].Appoint[1] or expDefine[1].Range[1]
+                    }
+                )
+                - timeZone
+            )
         end
     end
 
@@ -194,7 +230,19 @@ function Cron.next(expression, time)
         if more ~= 0 then
             UpDay(more)
         else
-            ttime = os.date('!*t', os.time({year = ttime.year, month = ttime.month, day = ttime.day, hour = newHour, min = expDefine[2].Range[1], sec = expDefine[1].Range[1]}) - timeZone)
+            ttime = os.date('!*t',
+                os.time(
+                    {
+                        year = ttime.year,
+                        month = ttime.month,
+                        day = ttime.day,
+                        hour = newHour,
+                        min = expDefine[2].Appoint and expDefine[2].Appoint[1] or expDefine[2].Range[1],
+                        sec = expDefine[1].Appoint and expDefine[1].Appoint[1] or expDefine[1].Range[1]
+                    }
+                )
+                - timeZone
+            )
         end
     end
 
@@ -209,7 +257,19 @@ function Cron.next(expression, time)
         if more ~= 0 then
             UpHour(more)
         else
-            ttime = os.date('!*t', os.time({year = ttime.year, month = ttime.month, day = ttime.day, hour = ttime.hour, min = newMin, sec = expDefine[1].Range[1]}) - timeZone)
+            ttime = os.date('!*t',
+                os.time(
+                    {
+                        year = ttime.year,
+                        month = ttime.month,
+                        day = ttime.day,
+                        hour = ttime.hour,
+                        min = newMin,
+                        sec = expDefine[1].Appoint and expDefine[1].Appoint[1] or expDefine[1].Range[1]
+                    }
+                )
+                - timeZone
+            )
         end
     end
 
@@ -224,7 +284,19 @@ function Cron.next(expression, time)
         if more ~= 0 then
             UpMin(more)
         else
-            ttime = os.date('!*t', os.time({year = ttime.year, month = ttime.month, day = ttime.day, hour = ttime.hour, min = ttime.min, sec = newSec}) - timeZone)
+            ttime = os.date('!*t',
+                os.time(
+                    {
+                        year = ttime.year,
+                        month = ttime.month,
+                        day = ttime.day,
+                        hour = ttime.hour,
+                        min = ttime.min,
+                        sec = newSec
+                    }
+                )
+                - timeZone
+            )
         end
     end
 
@@ -269,9 +341,9 @@ setmetatable(Cron, {__call = function(self, ...)
     return Cron.next(...)
 end})
 
--- local times = {Cron('0 0 0 1 */2 1,7', os.time())}
+-- local times = {Cron('0 0 0 * * 1,7', os.time())}
 -- for _ = 1, 10 do
---     table.insert(times, Cron('0 0 0 1 */2 1,7', times[#times] + 1))
+--     table.insert(times, Cron('0 0 0 * * 1,7', times[#times] + 1))
 -- end
 -- for _, v in ipairs(times) do
 --     print(os.date('%c', v))

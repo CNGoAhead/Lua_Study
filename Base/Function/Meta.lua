@@ -147,6 +147,7 @@ local function SpawnGetter(meta, getter)
     meta = meta or {}
     if type(getter) == 'function' then
         meta.__tindex = {}
+        meta.__findex = getter
         meta.__index = function(_, k)
             local v = getter(_, k)
             if v ~= nil then

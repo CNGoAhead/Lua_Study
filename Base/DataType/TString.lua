@@ -70,20 +70,18 @@ local String = {
     __call = function(self, ...)
         local bSuccess, func, ret
         local params = {...}
-        func = loadstring('return ' .. tostring(self))
-        bSuccess, func = pcall(func)
-        if bSuccess then
-            bSuccess, ret = xpcall(
-                function()
-                    func(unpack(params))
-                end,
-                function( ... )
-                    print('Error In String\n', tostring(self))
-                    print(...)
-                    print(debug.traceback())
-                end
-            )
-        end
+        func = loadstring(tostring(self))
+        assert(func, 'Error In Load String\n', tostring(self))
+        bSuccess, ret = xpcall(
+            function()
+                return func(unpack(params))
+            end,
+            function( ... )
+                print('Error In String\n', tostring(self))
+                print(...)
+                print(debug.traceback())
+            end
+        )
         return ret, bSuccess
     end
 }

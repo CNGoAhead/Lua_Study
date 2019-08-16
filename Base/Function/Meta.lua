@@ -1,152 +1,9 @@
 local Meta = {}
 
--- function Meta.PushBack(obj, meta)
---     local ometa = getmetatable(obj)
---     if ometa then
---         Meta.PushBack(ometa, meta)
---     else
---         setmetatable(obj, meta)
---     end
---     return obj
--- end
-
--- function Meta.PushFront(obj, meta)
---     return setmetatable(obj, setmetatable(meta, getmetatable(obj)))
--- end
-
--- function Meta.PopBack(obj)
---     local o = obj
---     local last
---     while getmetatable(o) do
---         last = o
---         o = getmetatable(o)
---     end
---     if last then
---         setmetatable(last, nil)
---     end
---     return obj
--- end
-
--- function Meta.PopFront(obj)
---     local meta = getmetatable(obj)
---     if meta then
---         setmetatable(obj, getmetatable(meta))
---         setmetatable(meta, nil)
---     end
---     return obj
--- end
-
--- function Meta.PushBackGetter(obj, getter)
---     local meta = getmetatable(obj) or {}
---     if meta.__index then
---         Meta.PushBackGetter(meta, getter)
---     else
---         meta.__index = getter
---         setmetatable(obj, meta)
---     end
---     return obj
--- end
-
--- function Meta.PushBackSetter(obj, setter)
---     local meta = getmetatable(obj) or {}
---     if meta.__newindex then
---         Meta.PushBackGetter(meta, getter)
---     else
---         meta.__newindex = getter
---         setmetatable(obj, meta)
---     end
---     return obj
--- end
-
--- function Meta.PushFrontGetter(obj, getter)
---     local meta = getmetatable(obj) or {}
---     if meta.__index then
---         return setmetatable(obj, setmetatable({__index = getter}, getmetatable(obj)))
---     else
---         meta.__index = getter
---         return setmetatable(obj, meta)
---     end
--- end
-
--- function Meta.PushFrontSetter(obj, setter)
---     local meta = getmetatable(obj) or {}
---     if meta.__newindex then
---         return setmetatable(obj, setmetatable({__index = setter}, getmetatable(obj)))
---     else
---         meta.__newindex = setter
---         return setmetatable(obj, meta)
---     end
--- end
-
--- function Meta.PopBackGetter(obj)
---     local meta = getmetatable(obj) or {}
---     if meta.__index then
---         Meta.PopBackGetter(meta)
---     else
---         meta.__index = nil
---         setmetatable(obj, next(meta) and meta or nil)
---     end
---     return obj
--- end
-
--- function Meta.PopBackSetter(obj, setter)
---     local meta = getmetatable(obj) or {}
---     if meta.__newindex then
---         Meta.PopBackSetter(meta)
---     else
---         meta.__newindex = nil
---         setmetatable(obj, next(meta) and meta or nil)
---     end
---     return obj
--- end
-
--- local function _RemoveMeta(obj)
---     local meta = getmetatable(obj)
---     if not meta or next(meta) then
---         return obj
---     else
---         return setmetatable(obj, getmetatable(meta))
---     end
--- end
-
--- function Meta.PopFrontGetter(obj)
---     local meta = getmetatable(obj) or {}
---     meta.__index = nil
---     return _RemoveMeta(obj)
--- end
-
--- function Meta.PopFrontSetter(obj)
---     local meta = getmetatable(obj) or {}
---     meta.__newindex = nil
---     return _RemoveMeta(obj)
--- end
-
--- function Meta.RemoveGetter(obj, getter)
---     local meta = getmetatable(obj)
---     if meta.__index == getter then
---         meta.__index = nil
---         _RemoveMeta(obj)
---     elseif meta then
---         Meta.RemoveGetter(meta, getter)
---     end
---     return obj
--- end
-
--- function Meta.RemoveSetter(obj, setter)
---     local meta = getmetatable(obj)
---     if meta.__newindex == getter then
---         meta.__newindex = nil
---         _RemoveMeta(obj)
---     elseif meta then
---         Meta.RemoveGetter(meta, getter)
---     end
---     return obj
--- end
-
 local function SpawnGetter(meta, getter)
     meta = meta or {}
     if type(getter) == 'function' then
-        meta.__tindex = {}
+        meta.__tindex = meta.__tindex or {}
         meta.__findex = getter
         meta.__index = function(_, k)
             local v = getter(_, k)
@@ -165,12 +22,7 @@ end
 function Meta.PushBackGetter(obj, getter)
     local meta = getmetatable(obj) or {}
     if meta.__index then
-        local type = type(meta.__index)
-        if type == 'function' then
-            Meta.PushBackGetter(meta.__tindex, getter)
-        elseif type == 'table' then
-            Meta.PushBackGetter(meta.__index, getter)
-        end
+        Meta.PushBackGetter(meta.__tindex or meta.__index, getter)
     else
         setmetatable(obj, SpawnGetter(meta, getter))
     end
@@ -198,7 +50,7 @@ local function SpawnSetter(meta, setter)
     meta = meta or {}
     if type(setter) == 'function' then
         meta.__tnewindex = meta.__tnewindex or {}
-        meta.__fnewindex = meta.__fnewindex or setter
+        meta.__fnewindex = setter
         meta.__newindex = function(_, k, v)
             local m = getmetatable(meta.__tnewindex)
             if m and m.__newindex then

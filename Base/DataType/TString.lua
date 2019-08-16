@@ -56,7 +56,7 @@ local String = {
         return split(tostring(self), sub)
     end,
     __unm = function(self)
-        return string.reverse(tostring(self))
+        return T(string.reverse(tostring(self)))
     end,
     __eq = function(self, target)
         return tostring(self) == tostring(target)

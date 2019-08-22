@@ -94,4 +94,8 @@ T = function(str)
     )
 end
 
-return T
+return function()
+    _G['T'] = T
+    _G['TString'] = T
+    return T
+end

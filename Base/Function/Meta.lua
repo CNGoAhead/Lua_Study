@@ -9,9 +9,8 @@ local function SpawnGetter(meta, getter)
             local v = getter(_, k)
             if v ~= nil then
                 return v
-            else
-                return meta.__tindex[k]
             end
+            return meta.__tindex[k]
         end
     elseif type(getter) == 'table' then
         meta.__index = getter
@@ -51,12 +50,14 @@ local function SpawnSetter(meta, setter)
     if type(setter) == 'function' then
         meta.__tnewindex = meta.__tnewindex or {}
         meta.__fnewindex = setter
-        meta.__newindex = function(_, k, v)
+        meta.__newindex = function(t, k, v)
             local m = getmetatable(meta.__tnewindex)
             if m and m.__newindex then
-                meta.__tnewindex[k] = v
+                if not m.__fnewindex or m.__newindex(t, k, v) then
+                    m.__newindex[k] = v
+                end
             else
-                setter(_, k, v)
+                setter(t, k, v)
             end
         end
     elseif type(setter) == 'table' then
@@ -150,7 +151,6 @@ function Meta.PopFrontSetter(obj)
     local meta = getmetatable(obj) or {}
     local newindex = meta.__tnewindex or meta.__newindex
     local nmeta = newindex and getmetatable(newindex)
-    local l = meta.__newindex
     meta.__tnewindex = nmeta and nmeta.__tnewindex
     meta.__fnewindex = nmeta and nmeta.__fnewindex
     meta.__newindex = nmeta and nmeta.__newindex

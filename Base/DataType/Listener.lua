@@ -1,3 +1,5 @@
+local Handler = require('Base.Function.Handler')()
+
 local Delegates = setmetatable({}, {__mode = 'v'})
 local function Delegate(...)
     local params = {...}
@@ -11,7 +13,7 @@ local function Delegate(...)
     return Delegates[key]
 end
 
-local MetaEvent = {}
+local MetaEvent = {__index = {__bIsEvent__ = true}}
 
 function MetaEvent:__add(call)
     self[call] = true
@@ -37,9 +39,11 @@ end
 local MetaListener = {}
 
 function MetaListener:__newindex(k, v)
-    self.__events[k] = Event()
-    if v then
-        self.__events[k][v] = true
+    local t = type(v)
+    if t == 'table' and v.__bIsEvent__ then
+        self.__events[k] = v
+    elseif t == 'function' then
+        self.__events[k] = Event() + v
     end
 end
 function MetaListener:__index(k)

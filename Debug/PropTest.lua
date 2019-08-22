@@ -3,7 +3,6 @@ local Listener, Event, Delegate = require('Base.DataType.Listener')()
 local Handler = require('Base.Function.Handler')()
 local T = require('Base.DataType.TString')()
 
--- p = {default, flag, get, set}
 local function encrypt(v, a, b)
     if type(v) == 'number' then
         return v * a + b

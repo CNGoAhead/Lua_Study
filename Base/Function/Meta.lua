@@ -160,4 +160,6 @@ function Meta.PopFrontSetter(obj)
     return obj
 end
 
-return Meta
+return function()
+    return Meta
+end

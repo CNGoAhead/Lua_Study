@@ -69,7 +69,6 @@ local function Getter(t, k)
         local listener = p.Listener
         listener.PreGet()
         local value = p.Get()
-        listener.AftGet()
         listener.OnGet()
         return value
     end
@@ -84,7 +83,6 @@ local function Setter(t, k, v)
             p.Set(v)
             listener.OnChange()
         end
-        listener.AftSet()
         listener.OnSet()
     end
     return true

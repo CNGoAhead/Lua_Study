@@ -15,6 +15,10 @@ end
 
 local MetaEvent = {__index = {__bIsEvent__ = true}}
 
+local function Event()
+    return setmetatable({}, MetaEvent)
+end
+
 function MetaEvent:__add(call)
     self[call] = true
     return self
@@ -32,11 +36,7 @@ function MetaEvent:__call(...)
     return self
 end
 
-local function Event()
-    return setmetatable({}, MetaEvent)
-end
-
-MetaEvent.Clone = function(self)
+function MetaEvent:Clone()
     local newEvent = Event()
     for k, v in pairs(self) do
         newEvent[k] = v

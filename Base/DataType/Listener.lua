@@ -36,6 +36,14 @@ local function Event()
     return setmetatable({}, MetaEvent)
 end
 
+MetaEvent.Clone = function(self)
+    local newEvent = Event()
+    for k, v in pairs(self) do
+        newEvent[k] = v
+    end
+    return newEvent
+end
+
 local MetaListener = {}
 
 function MetaListener:__newindex(k, v)

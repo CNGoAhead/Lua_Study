@@ -53,11 +53,13 @@ local function SpawnSetter(meta, setter)
         meta.__newindex = function(t, k, v)
             local m = getmetatable(meta.__tnewindex)
             if m and m.__newindex then
-                if not m.__fnewindex or m.__newindex(t, k, v) then
+                if not m.__fnewindex then
                     m.__newindex[k] = v
+                elseif m.__newindex(t, k, v) then
+                    return setter(t, k, v)
                 end
             else
-                setter(t, k, v)
+                return setter(t, k, v)
             end
         end
     elseif type(setter) == 'table' then

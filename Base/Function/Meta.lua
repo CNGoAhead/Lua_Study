@@ -1,12 +1,12 @@
 local Meta = {}
 
-local function SpawnGetter(meta, getter)
+local function SpawnGetter(obj, meta, getter)
     meta = meta or {}
     if type(getter) == 'function' then
         meta.__tindex = meta.__tindex or {}
         meta.__findex = getter
         meta.__index = function(_, k)
-            local v = getter(_, k)
+            local v = getter(obj, k)
             if v ~= nil then
                 return v
             end
@@ -23,7 +23,7 @@ function Meta.PushBackGetter(obj, getter)
     if meta.__index then
         Meta.PushBackGetter(meta.__tindex or meta.__index, getter)
     else
-        setmetatable(obj, SpawnGetter(meta, getter))
+        setmetatable(obj, SpawnGetter(obj, meta, getter))
     end
     return obj
 end
@@ -37,29 +37,30 @@ function Meta.PushFrontGetter(obj, getter)
         meta.__tindex = nil
         meta.__findex = nil
         meta.__index = nil
-        local nmeta = SpawnGetter(meta, getter)
-        setmetatable(nmeta.__tindex or nmeta.__index, SpawnGetter({__tindex = otindex}, ofindex or oindex))
+        local nmeta = SpawnGetter(obj, meta, getter)
+        setmetatable(nmeta.__tindex or nmeta.__index, SpawnGetter(obj, {__tindex = otindex}, ofindex or oindex))
         return setmetatable(obj, nmeta)
     else
-        return setmetatable(obj, SpawnGetter(meta, getter))
+        return setmetatable(obj, SpawnGetter(obj, meta, getter))
     end
 end
 
-local function SpawnSetter(meta, setter)
+local function SpawnSetter(obj, meta, setter)
     meta = meta or {}
     if type(setter) == 'function' then
         meta.__tnewindex = meta.__tnewindex or {}
         meta.__fnewindex = setter
-        meta.__newindex = function(t, k, v)
+        meta.__newindex = function(_, k, v)
             local m = getmetatable(meta.__tnewindex)
             if m and m.__newindex then
                 if not m.__fnewindex then
                     m.__newindex[k] = v
-                elseif m.__newindex(t, k, v) then
-                    return setter(t, k, v)
+                    return setter(obj, k, v)
+                elseif m.__newindex(obj, k, v) then
+                    return setter(obj, k, v)
                 end
             else
-                return setter(t, k, v)
+                return setter(obj, k, v)
             end
         end
     elseif type(setter) == 'table' then
@@ -78,7 +79,7 @@ function Meta.PushBackSetter(obj, setter)
             Meta.PushBackSetter(meta.__newindex, setter)
         end
     else
-        setmetatable(obj, SpawnSetter(meta, setter))
+        setmetatable(obj, SpawnSetter(obj, meta, setter))
     end
     return obj
 end
@@ -92,11 +93,11 @@ function Meta.PushFrontSetter(obj, setter)
         meta.__tnewindex = nil
         meta.__fnewindex = nil
         meta.__newindex = nil
-        local nmeta = SpawnSetter(meta, setter)
-        setmetatable(nmeta.__tnewindex or nmeta.__newindex, SpawnSetter({__tnewindex = otnewindex}, ofnewindex or onewindex))
+        local nmeta = SpawnSetter(obj, meta, setter)
+        setmetatable(nmeta.__tnewindex or nmeta.__newindex, SpawnSetter(obj, {__tnewindex = otnewindex}, ofnewindex or onewindex))
         return setmetatable(obj, nmeta)
     else
-        return setmetatable(obj, SpawnSetter(meta, setter))
+        return setmetatable(obj, SpawnSetter(obj, meta, setter))
     end
 end
 

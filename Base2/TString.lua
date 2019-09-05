@@ -39,7 +39,7 @@ local String = {
         return T(tostring(self) .. tostring(append))
     end,
     __mod = function(self, sub)
-        if type(sub) ~= 'table' or not sub[1] then
+        if type(sub) ~= 'table' then
             sub = {sub}
         end
         local text = tostring(self)

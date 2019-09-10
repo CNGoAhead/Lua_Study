@@ -18,7 +18,9 @@ local function split(text, sep)
     for k = 1, #strPos, 2 do
         local v = strPos[k]
         if strPos[k + 1] then
-            table.insert(result, string.sub(text, v, strPos[k + 1]))
+            local str = string.sub(text, v, strPos[k + 1])
+            table.insert(result, str)
+            result[str] = true
         end
     end
     return result

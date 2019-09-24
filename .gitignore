@@ -14,3 +14,6 @@
 *.ipch
 *.opendb
 *.sqlite
+
+!/simulator/**
+*.pdb

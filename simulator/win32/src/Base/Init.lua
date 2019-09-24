@@ -1,0 +1,11 @@
+_G['Class'], _G['New'], _G['Method'], _G['Struct'], _G['GetName'] = require('Base.Class')()
+_G['Cron'] = require('Base.Cron')()
+_G['Handler'] = require('Base.Handler')()
+_G['Listener'], _G['Event'], _G['Delegate'] = require('Base.Listener')()
+_G['Meta'] = require('Base.Meta')()
+_G['Print'] = require('Base.Print')()
+_G['Property'], _G['Prop'], _G['PropR'], _G['PropG'], _G['PropS'] = require('Base.Property')()
+_G['Ticker'] = require('Base.Ticker')()
+_G['Clone'] = require('Base.Clone')()
+_G['TString'] = require('Base.TString')()
+_G['T'] = _G['TString']
